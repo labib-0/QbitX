@@ -9,7 +9,7 @@ import { motion } from "framer-motion"
 import { Menu, X } from "lucide-react"
 
 const navLinks = [
-  { name: "Home", href: "#" },
+  { name: "Home", href: "/" },
   { name: "Features", href: "#features" },
   { name: "Roadmaps", href: "#roadmaps" },
   { name: "Projects", href: "#projects" },
@@ -31,7 +31,7 @@ export function Navbar() {
         <div className="flex gap-2 items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Image 
-              src="/logo.png" 
+              src="/logo_transparent_low_res.png" 
               alt="QbitX Logo" 
               width={140} 
               height={45} 
@@ -54,12 +54,9 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
-          <Button variant="ghost" render={<Link href="#projects" />}>
-            Explore Projects
-          </Button>
-          <Button className="rounded-full font-semibold" render={<Link href="#start" />}>
+          <Button className="rounded-full font-semibold bg-sky-500 hover:bg-sky-600 text-white" render={<Link href="/register/student" />}>
             Get Started
           </Button>
         </div>
@@ -98,10 +95,7 @@ export function Navbar() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 pt-4 border-t">
-              <Button variant="outline" className="w-full justify-center">
-                Explore Projects
-              </Button>
-              <Button className="w-full justify-center rounded-full font-semibold">
+              <Button className="w-full justify-center rounded-full font-semibold bg-sky-500 hover:bg-sky-600 text-white" render={<Link href="/register/student" />}>
                 Get Started
               </Button>
             </div>

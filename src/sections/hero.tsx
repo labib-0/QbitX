@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { ArrowRight, Bot, Code2, LineChart, Terminal, Calendar, Code, Database, Globe, Cpu } from "lucide-react"
@@ -107,11 +108,11 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
             >
-              <Button size="lg" className="h-12 px-8 text-base rounded shadow-md hover:shadow-lg transition-all">
+              <Button size="lg" className="h-12 px-8 text-base rounded shadow-md hover:shadow-lg transition-all bg-sky-500 hover:bg-sky-600 text-white" render={<Link href="/register/student" />}>
                 Start Learning
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base rounded">
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base rounded" render={<Link href="#roadmaps" />}>
                 Explore Roadmaps
               </Button>
             </motion.div>
@@ -148,7 +149,7 @@ export function HeroSection() {
                           <span className="text-xs font-medium">You</span>
                         </div>
                         <div className="bg-muted p-3 rounded-xl rounded-tl-none text-sm w-[85%]">
-                          I'm stuck on how to implement the custom hook for the weather API.
+                          I&apos;m stuck on how to implement the custom hook for the weather API.
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -156,7 +157,7 @@ export function HeroSection() {
                           <Bot className="h-4 w-4" />
                         </div>
                         <div className="bg-primary/5 p-3 rounded-xl rounded-tl-none text-sm w-[85%] border border-primary/10">
-                          Let's solve it together! A good approach is to use <code>useEffect</code> to fetch data and store it in state. Here is a starting template...
+                          Let&apos;s solve it together! A good approach is to use <code>useEffect</code> to fetch data and store it in state. Here is a starting template...
                         </div>
                       </div>
                     </div>
@@ -177,12 +178,13 @@ export function HeroSection() {
                     <Terminal className="h-8 w-8 text-primary" />
                     <span className="font-semibold">Current Project</span>
                     <span className="text-xs text-muted-foreground">Weather Dashboard</span>
-                    <Button size="sm" className="w-full mt-2 h-8 text-xs">Resume Coding</Button>
+                    <Button size="sm" className="w-full mt-2 h-8 text-xs" render={<Link href="/student/dashboard" />}>
+                      Resume Coding
+                    </Button>
                   </div>
                 </div>
               </div>
             </div>
-            {/* Removed Bottom Fade for flatter look */}
           </motion.div>
         </div>
       </div>

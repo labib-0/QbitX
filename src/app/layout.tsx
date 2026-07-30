@@ -15,8 +15,36 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "QbitX | AI-Driven Project-Based EdTech",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://qbitx.vercel.app"),
+  title: {
+    default: "QbitX | AI-Powered Project-Based EdTech Platform",
+    template: "%s | QbitX",
+  },
   description: "An AI-powered project-based learning platform that transforms curious students into confident software engineers through guided projects, mentorship, and industry-ready roadmaps.",
+  keywords: [
+    "QbitX",
+    "EdTech",
+    "Software Engineering",
+    "AI Code Tutor",
+    "Project-Based Learning",
+    "Mentorship",
+    "Coding Roadmaps"
+  ],
+  authors: [{ name: "QbitX Team" }],
+  openGraph: {
+    title: "QbitX | AI-Powered Project-Based EdTech Platform",
+    description: "An AI-powered project-based learning platform that transforms curious students into confident software engineers through guided projects, mentorship, and industry-ready roadmaps.",
+    url: "https://qbitx.vercel.app",
+    siteName: "QbitX",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QbitX | AI-Powered Project-Based EdTech Platform",
+    description: "An AI-powered project-based learning platform that transforms curious students into confident software engineers through guided projects, mentorship, and industry-ready roadmaps.",
+    creator: "@qbitx",
+  },
 };
 
 export default function RootLayout({

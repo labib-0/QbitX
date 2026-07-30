@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
+import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
 import { useAuth } from "@/context/authContext";
-import { Eye, EyeOff, Sparkles, RefreshCw, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, RefreshCw, ArrowRight } from "lucide-react";
 
 export default function StudentLoginPage() {
   const [email, setEmail] = useState("");
@@ -19,12 +20,6 @@ export default function StudentLoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleFillDemo = () => {
-    setEmail("student@qbitx.com");
-    setPassword("password123");
-    setError("");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -34,7 +29,7 @@ export default function StudentLoginPage() {
       await login(email, password, "student");
       router.push("/student/dashboard");
     } catch (err: any) {
-      setError(err.message || "Invalid credentials. Try student@qbitx.com / password123.");
+      setError(err.message || "No registered account found with this email. Please register first!");
     } finally {
       setLoading(false);
     }
@@ -48,20 +43,6 @@ export default function StudentLoginPage() {
           Welcome Back
         </h2>
         <p className="text-xs text-muted-foreground">Log in to access your student dashboard & courses.</p>
-      </div>
-
-      {/* Demo Creds Banner */}
-      <div className="bg-sky-500/10 border border-sky-500/20 p-3 rounded-2xl flex items-center justify-between gap-2 text-xs">
-        <span className="text-sky-700 dark:text-sky-300 font-semibold">
-          Demo: <strong>student@qbitx.com</strong>
-        </span>
-        <button
-          type="button"
-          onClick={handleFillDemo}
-          className="inline-flex items-center gap-1 bg-sky-500 text-white px-3 py-1 rounded-xl font-bold text-xs hover:bg-sky-600 transition-colors shadow-sm font-heading"
-        >
-          <Sparkles className="h-3.5 w-3.5" /> Auto-Fill
-        </button>
       </div>
 
       <ErrorAlert message={error} onDismiss={() => setError("")} />
@@ -131,6 +112,9 @@ export default function StudentLoginPage() {
           )}
         </button>
       </form>
+
+      {/* Demo Google & GitHub Registration/Login Option */}
+      <SocialLoginButton role="student" />
 
       {/* Footer Link */}
       <p className="text-center text-xs text-slate-600 dark:text-slate-400 pt-2 font-medium">

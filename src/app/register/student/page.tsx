@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { SuccessModal } from "@/components/auth/SuccessModal";
+import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
 import { useAuth } from "@/context/authContext";
 import { Eye, EyeOff, RefreshCw, ArrowRight } from "lucide-react";
 
@@ -210,6 +211,9 @@ export default function StudentRegisterPage() {
           )}
         </button>
       </form>
+
+      {/* Demo Google & GitHub Option */}
+      <SocialLoginButton role="student" />
 
       {/* Footer Link */}
       <p className="text-center text-xs text-slate-600 dark:text-slate-400 pt-2 font-medium">

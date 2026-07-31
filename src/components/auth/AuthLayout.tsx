@@ -85,43 +85,45 @@ export function AuthLayout({ children, illustrationType = "login" }: AuthLayoutP
           </div>
         </header>
 
-        {/* Main Grid Container */}
-        <main className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-10 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
-          {/* Form Container - PRIORITIZED on top for mobile/small screens, right side near top for desktop */}
-          <div className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 w-full max-w-xl xl:max-w-2xl ml-auto">
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 md:p-10 space-y-6 w-full">
-              {children}
-            </div>
-          </div>
-
-          {/* Graphic Banner - Placed BELOW form on mobile/tablet, left side on desktop */}
-          <div className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 flex items-center justify-center w-full mt-4 lg:mt-0">
-            <div className="relative w-full max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
-              <Image
-                src={
-                  illustrationType === "login"
-                    ? "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000"
-                    : "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000"
-                }
-                alt="QbitX Auth Graphic"
-                fill
-                className="object-cover rounded-3xl"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent rounded-3xl flex flex-col justify-end p-6 sm:p-8 text-white">
-                <span className="text-xs font-extrabold uppercase bg-sky-500 text-white px-3.5 py-1 rounded-lg w-fit shadow-md mb-2 font-heading">
-                  QbitX EdTech Platform
-                </span>
-                <h3 className="text-xl sm:text-2xl font-extrabold font-heading leading-snug">
-                  {illustrationType === "login"
-                    ? "Empower Your Engineering Career with 24/7 AI Mentorship"
-                    : "Start Your Coding Journey & Build Real Software"}
-                </h3>
+        {/* Main Grid Container - Centered Vertically & Horizontally */}
+        <main className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 flex-1 flex flex-col justify-center items-center">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center justify-center my-auto">
+            
+            {/* Form Container - Centered in the middle */}
+            <div className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 w-full max-w-xl xl:max-w-2xl mx-auto flex justify-center">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 md:p-10 space-y-6 w-full">
+                {children}
               </div>
             </div>
-          </div>
 
+            {/* Graphic Banner - Placed BELOW form on mobile/tablet, left side on desktop */}
+            <div className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 flex items-center justify-center w-full mt-4 lg:mt-0 mx-auto">
+              <div className="relative w-full max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+                <Image
+                  src={
+                    illustrationType === "login"
+                      ? "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000"
+                      : "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000"
+                  }
+                  alt="QbitX Auth Graphic"
+                  fill
+                  className="object-cover rounded-3xl"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent rounded-3xl flex flex-col justify-end p-6 sm:p-8 text-white">
+                  <span className="text-xs font-extrabold uppercase bg-sky-500 text-white px-3.5 py-1 rounded-lg w-fit shadow-md mb-2 font-heading">
+                    QbitX EdTech Platform
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-extrabold font-heading leading-snug">
+                    {illustrationType === "login"
+                      ? "Empower Your Engineering Career with 24/7 AI Mentorship"
+                      : "Start Your Coding Journey & Build Real Software"}
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </main>
 
         {/* Footer */}

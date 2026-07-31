@@ -31,6 +31,11 @@ export default function StudentRegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement;
     const value = target.type === "checkbox" ? target.checked : target.value;
+    if (target.name === "phone") {
+      const cleanDigits = target.value.replace(/\D/g, "").slice(0, 10);
+      setFormData({ ...formData, phone: cleanDigits });
+      return;
+    }
     setFormData({ ...formData, [target.name]: value });
   };
 
@@ -41,6 +46,14 @@ export default function StudentRegisterPage() {
     if (!formData.name || !formData.email || !formData.password) {
       setError("Please fill in all required fields.");
       return;
+    }
+
+    if (formData.phone) {
+      const cleanPhone = formData.phone.replace(/\D/g, "");
+      if (cleanPhone.length !== 10) {
+        setError("Phone number must be exactly 10 digits (e.g. 1712345678).");
+        return;
+      }
     }
 
     if (!formData.acceptTerms) {

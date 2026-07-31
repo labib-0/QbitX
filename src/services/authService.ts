@@ -72,10 +72,7 @@ function saveUserToStorage(user: UserProfile) {
 }
 
 const isSupabaseConfigured = () => {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder-project")
-  );
+  return true;
 };
 
 export const AuthService = {

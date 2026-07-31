@@ -86,11 +86,18 @@ export function AuthLayout({ children, illustrationType = "login" }: AuthLayoutP
         </header>
 
         {/* Main Grid Container */}
-        <main className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-10 sm:py-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        <main className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6 sm:py-10 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* Left Side: 3D Illustration Graphic (Restored Photo Part) */}
-          <div className="lg:col-span-6 flex items-center justify-center">
-            <div className="relative w-full max-w-xl aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+          {/* Form Container - PRIORITIZED on top for mobile/small screens, right side near top for desktop */}
+          <div className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 w-full max-w-xl xl:max-w-2xl ml-auto">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 md:p-10 space-y-6 w-full">
+              {children}
+            </div>
+          </div>
+
+          {/* Graphic Banner - Placed BELOW form on mobile/tablet, left side on desktop */}
+          <div className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 flex items-center justify-center w-full mt-4 lg:mt-0">
+            <div className="relative w-full max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
               <Image
                 src={
                   illustrationType === "login"
@@ -102,23 +109,16 @@ export function AuthLayout({ children, illustrationType = "login" }: AuthLayoutP
                 className="object-cover rounded-3xl"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent rounded-3xl flex flex-col justify-end p-8 sm:p-10 text-white">
-                <span className="text-xs font-extrabold uppercase bg-sky-500 text-white px-3.5 py-1 rounded-lg w-fit shadow-md mb-3 font-heading">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent rounded-3xl flex flex-col justify-end p-6 sm:p-8 text-white">
+                <span className="text-xs font-extrabold uppercase bg-sky-500 text-white px-3.5 py-1 rounded-lg w-fit shadow-md mb-2 font-heading">
                   QbitX EdTech Platform
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-extrabold font-heading leading-snug">
+                <h3 className="text-xl sm:text-2xl font-extrabold font-heading leading-snug">
                   {illustrationType === "login"
                     ? "Empower Your Engineering Career with 24/7 AI Mentorship"
                     : "Start Your Coding Journey & Build Real Software"}
                 </h3>
               </div>
-            </div>
-          </div>
-
-          {/* Right Side: Clean Form Card */}
-          <div className="lg:col-span-6 max-w-md lg:max-w-lg ml-auto w-full">
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-8 sm:p-10 space-y-6">
-              {children}
             </div>
           </div>
 

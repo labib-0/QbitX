@@ -289,20 +289,31 @@ export const AuthService = {
    */
   async loginWithProvider(provider: "google", role: "student" | "mentor"): Promise<UserProfile> {
     if (isSupabaseConfigured()) {
+      const redirectTo = typeof window !== "undefined"
+        ? `${window.location.origin}/student/dashboard`
+        : "https://qbitx.vercel.app/student/dashboard";
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/student/dashboard`,
+          redirectTo,
           queryParams: {
             access_type: "offline",
-            prompt: "consent",
+            prompt: "select_account",
           },
         },
       });
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // signInWithOAuth redirects the browser window directly to Google OAuth consent page.
+      // Do NOT execute demo fallback code!
+      return new Promise<UserProfile>(() => {});
     }
 
-    // Demo / fallback response
+    // Only fallback if Supabase environment keys are completely unconfigured
     await new Promise((resolve) => setTimeout(resolve, 500));
     const googleUser: UserProfile = {
       id: `usr_google_${Date.now()}`,

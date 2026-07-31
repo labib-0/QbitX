@@ -20,13 +20,9 @@ export function SocialLoginButton({ role, onSuccess }: SocialLoginButtonProps) {
     try {
       await loginWithProvider(provider, role);
       if (onSuccess) onSuccess();
-      if (role === "student") {
-        router.push("/student/dashboard");
-      } else {
-        router.push("/dashboard/mentor");
-      }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(e.message || "Google authentication failed. Please try again.");
     } finally {
       setLoadingProvider(null);
     }

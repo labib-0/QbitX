@@ -111,10 +111,7 @@ export function HelpDeskModal({ isOpen, onClose }: HelpDeskModalProps) {
           ))}
         </div>
 
-        {/* Footer info */}
-        <p className="text-[11px] text-center text-muted-foreground pt-1">
-          Need urgent live debugging? Join today&apos;s active <strong>Support Session</strong> on the right sidebar.
-        </p>
+
 
       </div>
     </div>

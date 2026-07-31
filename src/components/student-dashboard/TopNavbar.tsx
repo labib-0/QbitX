@@ -79,37 +79,7 @@ export function TopNavbar({
             </Link>
           </div>
 
-          {/* Center/Right: English Top Nav Links */}
-          <div className="hidden sm:flex items-center gap-8 text-xs font-extrabold text-muted-foreground">
-            
-            {/* AI Mentor (Support) */}
-            <button
-              onClick={onOpenAIAssistant}
-              className="flex items-center gap-2 text-foreground hover:text-sky-500 transition-colors"
-            >
-              <Sparkles className="h-4.5 w-4.5 text-purple-500" />
-              <span>AI Mentor (Support)</span>
-            </button>
 
-            {/* Help Desk (Direct Mentor Contact) */}
-            <button
-              onClick={() => setShowHelpDeskModal(true)}
-              className="flex items-center gap-2 text-foreground hover:text-sky-500 transition-colors"
-            >
-              <Phone className="h-4.5 w-4.5 text-sky-500" />
-              <span>Help Desk</span>
-            </button>
-
-            {/* My Courses */}
-            <button
-              onClick={() => onSelectTab("My Learning")}
-              className="flex items-center gap-2 text-foreground hover:text-sky-500 transition-colors"
-            >
-              <BookOpen className="h-4.5 w-4.5 text-indigo-500" />
-              <span>My Courses</span>
-            </button>
-
-          </div>
 
           {/* Right Icons: Search, Theme, Notifications, Profile */}
           <div className="flex items-center gap-3 sm:gap-4">

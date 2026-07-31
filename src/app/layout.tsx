@@ -61,8 +61,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <AuthProvider>

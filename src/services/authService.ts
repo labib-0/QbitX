@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabaseClient";
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -45,7 +47,7 @@ export interface RegisterMentorParams {
   documentsFile?: File | null;
 }
 
-// In-memory + LocalStorage store for registered users
+// In-memory + LocalStorage store for fallback/demo
 const REGISTERED_USERS_KEY = "qbitx_registered_users";
 
 function getStoredUsers(): UserProfile[] {
@@ -69,14 +71,50 @@ function saveUserToStorage(user: UserProfile) {
   }
 }
 
+const isSupabaseConfigured = () => {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder-project")
+  );
+};
+
 export const AuthService = {
   /**
-   * Login student or mentor with email & password.
-   * Requires registration!
+   * Login student or mentor with email & password via Supabase Auth
    */
   async login(email: string, password: string, role: "student" | "mentor"): Promise<UserProfile> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.user) {
+        const metadata = data.user.user_metadata || {};
+        const profile: UserProfile = {
+          id: data.user.id,
+          email: data.user.email || email,
+          name: metadata.full_name || metadata.name || email.split("@")[0],
+          role: metadata.role || role,
+          university: metadata.university || "Tech University",
+          department: metadata.department || "Computer Science",
+          studentId: metadata.studentId || `CS-${data.user.id.slice(-4)}`,
+          experienceLevel: metadata.experienceLevel || "Intermediate",
+          track: metadata.track || "Web Development",
+          isVerified: !!data.user.email_confirmed_at,
+          onboardingCompleted: true,
+        };
+        saveUserToStorage(profile);
+        return profile;
+      }
+    }
+
+    // Fallback local storage auth for testing without keys
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const storedUsers = getStoredUsers();
     const foundUser = storedUsers.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() && u.role === role
@@ -89,7 +127,6 @@ export const AuthService = {
       return foundUser;
     }
 
-    // Default demo user if email is student@qbitx.com
     if (email.toLowerCase() === "student@qbitx.com") {
       return {
         id: "usr_student_demo",
@@ -110,11 +147,53 @@ export const AuthService = {
   },
 
   /**
-   * Register a new student
+   * Register a new student with Supabase Auth
    */
   async registerStudent(params: RegisterStudentParams): Promise<UserProfile> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    if (isSupabaseConfigured()) {
+      const fullName = `${params.firstName} ${params.lastName}`.trim();
+      const { data, error } = await supabase.auth.signUp({
+        email: params.email,
+        password: params.password,
+        options: {
+          data: {
+            full_name: fullName,
+            firstName: params.firstName,
+            lastName: params.lastName,
+            role: "student",
+            university: params.university,
+            department: params.department,
+            studentId: params.studentId,
+            experience: params.experience,
+            track: params.track,
+          },
+        },
+      });
 
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const userId = data.user?.id || `usr_std_${Date.now()}`;
+      const newUser: UserProfile = {
+        id: userId,
+        email: params.email,
+        name: fullName,
+        role: "student",
+        university: params.university || "Tech University",
+        department: params.department || "Computer Science",
+        studentId: params.studentId || `CS-${Date.now().toString().slice(-4)}`,
+        experienceLevel: params.experience || "Beginner",
+        track: params.track || "Web Development",
+        isVerified: true,
+        onboardingCompleted: true,
+      };
+      saveUserToStorage(newUser);
+      return newUser;
+    }
+
+    // Fallback local registration
+    await new Promise((resolve) => setTimeout(resolve, 600));
     const storedUsers = getStoredUsers();
     const existing = storedUsers.find((u) => u.email.toLowerCase() === params.email.toLowerCase());
     if (existing) {
@@ -143,8 +222,38 @@ export const AuthService = {
    * Register a new mentor application
    */
   async registerMentor(params: RegisterMentorParams): Promise<{ user: UserProfile; needsApproval: boolean }> {
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.auth.signUp({
+        email: params.email,
+        password: "TempPassword123!",
+        options: {
+          data: {
+            full_name: params.fullName,
+            role: "mentor",
+            areaOfExpertise: params.areaOfExpertise,
+            isApproved: false,
+          },
+        },
+      });
 
+      if (error) throw new Error(error.message);
+
+      const newMentor: UserProfile = {
+        id: data.user?.id || `usr_mnt_${Date.now()}`,
+        email: params.email,
+        name: params.fullName,
+        role: "mentor",
+        department: params.areaOfExpertise,
+        isVerified: true,
+        isApproved: false,
+        onboardingCompleted: true,
+      };
+
+      saveUserToStorage(newMentor);
+      return { user: newMentor, needsApproval: true };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
     const newMentor: UserProfile = {
       id: `usr_mnt_${Date.now()}`,
       email: params.email,
@@ -157,31 +266,48 @@ export const AuthService = {
     };
 
     saveUserToStorage(newMentor);
-
-    return {
-      user: newMentor,
-      needsApproval: true,
-    };
+    return { user: newMentor, needsApproval: true };
   },
 
   /**
-   * Send Password Reset Link
+   * Send Password Reset Link via Supabase Auth
    */
   async sendPasswordResetEmail(email: string): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw new Error(error.message);
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 400));
     return true;
   },
 
   /**
-   * Demo Google / GitHub OAuth Login or Registration
+   * Google OAuth Sign-in & Sign-up via Supabase Auth
    */
-  async loginWithProvider(provider: "google" | "github", role: "student" | "mentor"): Promise<UserProfile> {
-    await new Promise((resolve) => setTimeout(resolve, 700));
+  async loginWithProvider(provider: "google", role: "student" | "mentor"): Promise<UserProfile> {
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/student/dashboard`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (error) throw new Error(error.message);
+    }
 
+    // Demo / fallback response
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const googleUser: UserProfile = {
       id: `usr_google_${Date.now()}`,
-      email: `student_${provider}@gmail.com`,
-      name: `Google Demo Student`,
+      email: `student_google@gmail.com`,
+      name: `Google Student`,
       role,
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
       university: "Stanford / Tech University",
@@ -196,5 +322,17 @@ export const AuthService = {
 
     saveUserToStorage(googleUser);
     return googleUser;
+  },
+
+  /**
+   * Sign out from Supabase Session
+   */
+  async logout(): Promise<void> {
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut();
+    }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("qbitx_auth_user");
+    }
   },
 };

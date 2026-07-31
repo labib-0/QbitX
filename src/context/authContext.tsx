@@ -7,6 +7,7 @@ import {
   RegisterStudentParams,
   RegisterMentorParams,
 } from "@/services/authService";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -14,7 +15,7 @@ interface AuthContextType {
   adminApprovedToggle: boolean; // Demo toggle for admin approval testing
   setAdminApprovedToggle: (approved: boolean) => void;
   login: (email: string, password: string, role: "student" | "mentor") => Promise<UserProfile>;
-  loginWithProvider: (provider: "google" | "github", role: "student" | "mentor") => Promise<UserProfile>;
+  loginWithProvider: (provider: "google", role: "student" | "mentor") => Promise<UserProfile>;
   registerStudent: (params: RegisterStudentParams) => Promise<UserProfile>;
   registerMentor: (params: RegisterMentorParams) => Promise<{ user: UserProfile; needsApproval: boolean }>;
   logout: () => void;
@@ -47,6 +48,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
+
+    // Subscribe to Supabase Auth State Changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const metadata = session.user.user_metadata || {};
+        const profile: UserProfile = {
+          id: session.user.id,
+          email: session.user.email || "",
+          name: metadata.full_name || metadata.name || session.user.email?.split("@")[0] || "User",
+          role: metadata.role || "student",
+          avatarUrl: metadata.avatar_url || metadata.picture,
+          university: metadata.university || "Tech University",
+          department: metadata.department || "Computer Science",
+          studentId: metadata.studentId || `CS-${session.user.id.slice(-4)}`,
+          experienceLevel: metadata.experienceLevel || "Intermediate",
+          track: metadata.track || "Web Development",
+          isVerified: !!session.user.email_confirmed_at,
+          onboardingCompleted: true,
+        };
+        setUser(profile);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(profile));
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const saveUserSession = (u: UserProfile | null) => {
@@ -70,11 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, role: "student" | "mentor") => {
     const loggedInUser = await AuthService.login(email, password, role);
     
-    // Check if mentor requires admin approval override by toggle
     if (role === "mentor") {
       loggedInUser.isApproved = adminApprovedToggle;
       if (!adminApprovedToggle) {
-        throw new Error("Your mentor application is pending admin review. Toggle 'Admin Approved' in top banner to test.");
+        throw new Error("Your mentor application is pending admin review.");
       }
     }
 
@@ -82,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loggedInUser;
   };
 
-  const loginWithProvider = async (provider: "google" | "github", role: "student" | "mentor") => {
+  const loginWithProvider = async (provider: "google", role: "student" | "mentor") => {
     const socialUser = await AuthService.loginWithProvider(provider, role);
     saveUserSession(socialUser);
     return socialUser;
@@ -103,7 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await AuthService.logout();
     saveUserSession(null);
   };
 

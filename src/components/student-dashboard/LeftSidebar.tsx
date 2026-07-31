@@ -10,7 +10,9 @@ import {
   LogOut, 
   X,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Sparkles,
+  Headphones
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
@@ -22,6 +24,8 @@ interface LeftSidebarProps {
   onCloseMobile: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onOpenAIAssistant?: () => void;
+  onOpenHelpDesk?: () => void;
 }
 
 export function LeftSidebar({
@@ -31,6 +35,8 @@ export function LeftSidebar({
   onCloseMobile,
   isCollapsed = false,
   onToggleCollapse,
+  onOpenAIAssistant,
+  onOpenHelpDesk,
 }: LeftSidebarProps) {
   const { logout } = useAuth();
   const router = useRouter();
@@ -38,6 +44,8 @@ export function LeftSidebar({
   const navItems = [
     { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
     { name: "My Learning", label: "My Courses", icon: BookOpen },
+    { name: "AI Mentor Support", label: "AI Mentor Support", icon: Sparkles, onClick: onOpenAIAssistant },
+    { name: "Help Desk", label: "Help Desk", icon: Headphones, onClick: onOpenHelpDesk },
     { name: "Learning Families", label: "My Team", icon: Users },
     { name: "Assignments", label: "Assignments", icon: CheckCircle2 },
     { name: "Certificates", label: "Certificates", icon: Award },
@@ -84,7 +92,11 @@ export function LeftSidebar({
               <button
                 key={item.name}
                 onClick={() => {
-                  onSelectTab(item.name);
+                  if (item.onClick) {
+                    item.onClick();
+                  } else {
+                    onSelectTab(item.name);
+                  }
                   onCloseMobile();
                 }}
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${

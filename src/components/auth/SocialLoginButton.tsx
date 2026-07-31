@@ -12,10 +12,10 @@ interface SocialLoginButtonProps {
 
 export function SocialLoginButton({ role, onSuccess }: SocialLoginButtonProps) {
   const { loginWithProvider } = useAuth();
-  const [loadingProvider, setLoadingProvider] = useState<"google" | "github" | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<"google" | null>(null);
   const router = useRouter();
 
-  const handleProviderLogin = async (provider: "google" | "github") => {
+  const handleProviderLogin = async (provider: "google") => {
     setLoadingProvider(provider);
     try {
       await loginWithProvider(provider, role);
@@ -41,18 +41,18 @@ export function SocialLoginButton({ role, onSuccess }: SocialLoginButtonProps) {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {/* Google Demo Registration & Login Button */}
+      <div>
+        {/* Google Registration & Login Button */}
         <button
           type="button"
           onClick={() => handleProviderLogin("google")}
           disabled={loadingProvider !== null}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-3 px-4 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 transition-colors shadow-sm disabled:opacity-50 font-heading"
+          className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-3.5 px-4 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 transition-all shadow-sm disabled:opacity-50 font-heading"
         >
           {loadingProvider === "google" ? (
             <RefreshCw className="h-4 w-4 animate-spin text-sky-500" />
           ) : (
-            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+            <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#EA4335"
                 d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
@@ -71,26 +71,10 @@ export function SocialLoginButton({ role, onSuccess }: SocialLoginButtonProps) {
               />
             </svg>
           )}
-          <span>Google (Demo)</span>
-        </button>
-
-        {/* GitHub Demo Button */}
-        <button
-          type="button"
-          onClick={() => handleProviderLogin("github")}
-          disabled={loadingProvider !== null}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 py-3 px-4 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 hover:border-slate-400 transition-colors shadow-sm disabled:opacity-50 font-heading"
-        >
-          {loadingProvider === "github" ? (
-            <RefreshCw className="h-4 w-4 animate-spin text-purple-500" />
-          ) : (
-            <svg className="h-4 w-4 fill-current text-slate-900 dark:fill-white shrink-0" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-          )}
-          <span>GitHub (Demo)</span>
+          <span>Continue with Google</span>
         </button>
       </div>
     </div>
   );
 }
+

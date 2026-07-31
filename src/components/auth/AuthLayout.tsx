@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface AuthLayoutProps {
@@ -16,9 +16,30 @@ interface AuthLayoutProps {
   showDemoAdminBanner?: boolean;
 }
 
-export function AuthLayout({ children, illustrationType = "login" }: AuthLayoutProps) {
+const MOTIVATIONAL_QUOTES = [
+  { text: "Empower Your Engineering Career with 24/7 AI Mentorship", author: "QbitX Platform" },
+  { text: "The secret to getting ahead is getting started.", author: "Mark Twain" },
+  { text: "First, solve the problem. Then, write the code.", author: "John Johnson" },
+  { text: "Make it work, make it right, make it fast.", author: "Kent Beck" },
+  { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman" },
+  { text: "Build real software, transform curious students into confident engineers.", author: "QbitX Team" },
+  { text: "Great software is built by relentless practice and curious minds.", author: "AI Code Tutor" },
+  { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House" },
+  { text: "Turn code errors into breakthroughs through guided mentorship.", author: "QbitX Engineering" },
+  { text: "Every expert was once a beginner who refused to give up.", author: "CS Roadmap" },
+];
+
+export function AuthLayout({ children }: AuthLayoutProps) {
   const pathname = usePathname();
   const isLoginPage = pathname?.includes("/login");
+
+  const [currentQuote, setCurrentQuote] = useState(MOTIVATIONAL_QUOTES[0]);
+
+  useEffect(() => {
+    // Pick a random motivational quote on every page load/refresh
+    const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+    setCurrentQuote(MOTIVATIONAL_QUOTES[randomIndex]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground flex flex-col justify-between relative font-sans antialiased">
@@ -85,46 +106,44 @@ export function AuthLayout({ children, illustrationType = "login" }: AuthLayoutP
           </div>
         </header>
 
-        {/* Main Grid Container - Centered Vertically & Horizontally */}
+        {/* Main Content Area - Form centered in middle */}
         <main className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 sm:py-12 flex-1 flex flex-col justify-center items-center">
-          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center justify-center my-auto">
+          <div className="w-full max-w-xl xl:max-w-2xl mx-auto flex justify-center my-auto">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 md:p-10 space-y-6 w-full">
+              {children}
+            </div>
+          </div>
+        </main>
+
+        {/* Thinner, Wider Footer-Style Motivation Banner (Separate from real footer) */}
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 my-6">
+          <div className="relative rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl bg-slate-950 text-white p-6 sm:p-8 md:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
             
-            {/* Form Container - Centered in the middle */}
-            <div className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 w-full max-w-xl xl:max-w-2xl mx-auto flex justify-center">
-              <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6 sm:p-8 md:p-10 space-y-6 w-full">
-                {children}
-              </div>
+            {/* Background Image Overlay */}
+            <Image
+              src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1600"
+              alt="QbitX Inspiration"
+              fill
+              className="object-cover opacity-20"
+            />
+
+            <div className="relative z-10 space-y-2 max-w-3xl">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase bg-sky-500 text-white px-3 py-1 rounded-lg shadow-md font-heading">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>QbitX Daily Inspiration</span>
+              </span>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold font-heading leading-snug">
+                &ldquo;{currentQuote.text}&rdquo;
+              </h3>
             </div>
 
-            {/* Graphic Banner - Placed BELOW form on mobile/tablet, left side on desktop */}
-            <div className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 flex items-center justify-center w-full mt-4 lg:mt-0 mx-auto">
-              <div className="relative w-full max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
-                <Image
-                  src={
-                    illustrationType === "login"
-                      ? "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000"
-                      : "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000"
-                  }
-                  alt="QbitX Auth Graphic"
-                  fill
-                  className="object-cover rounded-3xl"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent rounded-3xl flex flex-col justify-end p-6 sm:p-8 text-white">
-                  <span className="text-xs font-extrabold uppercase bg-sky-500 text-white px-3.5 py-1 rounded-lg w-fit shadow-md mb-2 font-heading">
-                    QbitX EdTech Platform
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-extrabold font-heading leading-snug">
-                    {illustrationType === "login"
-                      ? "Empower Your Engineering Career with 24/7 AI Mentorship"
-                      : "Start Your Coding Journey & Build Real Software"}
-                  </h3>
-                </div>
-              </div>
+            <div className="relative z-10 shrink-0 text-left md:text-right w-full md:w-auto">
+              <span className="text-xs font-bold text-sky-400 font-heading block">— {currentQuote.author}</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">Refreshes every session ⚡</span>
             </div>
 
           </div>
-        </main>
+        </div>
 
         {/* Footer */}
         <footer className="w-full border-t border-slate-200 dark:border-slate-800 py-4 text-center text-xs text-muted-foreground font-medium">

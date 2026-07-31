@@ -32,6 +32,7 @@ const MOTIVATIONAL_QUOTES = [
 export function AuthLayout({ children }: AuthLayoutProps) {
   const pathname = usePathname();
   const isLoginPage = pathname?.includes("/login");
+  const isRegisterPage = pathname?.includes("/register");
 
   const [currentQuote, setCurrentQuote] = useState(MOTIVATIONAL_QUOTES[0]);
 
@@ -86,10 +87,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               
               <Link
                 href="/login/student"
-                className={`px-4.5 py-2.5 rounded-xl border transition-all ${
+                className={`px-4.5 py-2.5 rounded-xl transition-all font-extrabold ${
                   isLoginPage
-                    ? "border-sky-500 text-sky-600 bg-sky-50 dark:bg-sky-950/40"
-                    : "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    ? "border-2 border-sky-500 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 shadow-sm"
+                    : "border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
                 Login
@@ -97,7 +98,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
               <Link
                 href="/register/student"
-                className="px-4.5 py-2.5 rounded-xl text-white transition-all shadow-md bg-sky-500 hover:bg-sky-600 shadow-sky-500/20"
+                className={`px-4.5 py-2.5 rounded-xl transition-all font-extrabold ${
+                  isRegisterPage
+                    ? "bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20 border border-sky-500"
+                    : "border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
               >
                 Registration
               </Link>
@@ -139,7 +144,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
             <div className="relative z-10 shrink-0 text-left md:text-right w-full md:w-auto">
               <span className="text-xs font-bold text-sky-400 font-heading block">— {currentQuote.author}</span>
-              <span className="text-[10px] text-slate-400 block mt-0.5">Refreshes every session ⚡</span>
             </div>
 
           </div>

@@ -290,7 +290,7 @@ export const AuthService = {
         ? `${window.location.origin}/student/dashboard`
         : "https://qbitx.vercel.app/student/dashboard";
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo,
@@ -303,6 +303,10 @@ export const AuthService = {
 
       if (error) {
         throw new Error(error.message);
+      }
+
+      if (data?.url && typeof window !== "undefined") {
+        window.location.assign(data.url);
       }
 
       // signInWithOAuth redirects the browser window directly to Google OAuth consent page.

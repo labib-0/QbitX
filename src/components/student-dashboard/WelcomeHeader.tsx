@@ -2,6 +2,7 @@
 
 import { StudentOverview } from "@/services/DashboardService";
 import { Sparkles, Trophy, Flame, Clock, Award, FolderCheck, TrendingUp, Zap } from "lucide-react";
+import { useAuth } from "@/context/authContext";
 
 interface WelcomeHeaderProps {
   overview: StudentOverview | null;
@@ -9,6 +10,8 @@ interface WelcomeHeaderProps {
 }
 
 export function WelcomeHeader({ overview, onOpenAIAssistant }: WelcomeHeaderProps) {
+  const { user } = useAuth();
+
   const stats = overview?.stats || {
     level: 12,
     xp: 8450,
@@ -23,7 +26,8 @@ export function WelcomeHeader({ overview, onOpenAIAssistant }: WelcomeHeaderProp
     leaderboardRank: 4,
   };
 
-  const name = overview?.name || "Labib";
+  // Prefer live auth user name, then overview prop, then generic fallback
+  const name = user?.name || overview?.name || "Student";
   const xpProgress = Math.min(100, Math.round((stats.xp / stats.xpToNextLevel) * 100));
 
   return (

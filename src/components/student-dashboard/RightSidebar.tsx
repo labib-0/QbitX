@@ -5,12 +5,9 @@ import {
   Flame, 
   Clock, 
   CheckCircle2, 
-  AlertCircle, 
-  Megaphone, 
-  Sparkles, 
-  ChevronRight,
-  Plus
+  Megaphone
 } from "lucide-react";
+import { MOCK_STATS, MOCK_ASSIGNMENTS } from "@/lib/dashboardData";
 
 export function RightSidebar() {
   const [tasks, setTasks] = useState([
@@ -25,6 +22,7 @@ export function RightSidebar() {
     setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
+  const streak = MOCK_STATS.currentStreak;
   const completedCount = tasks.filter(t => t.done).length;
 
   return (
@@ -37,12 +35,12 @@ export function RightSidebar() {
             <Flame className="h-5 w-5 animate-pulse" />
             <span>Learning Streak</span>
           </div>
-          <span className="text-xs font-mono font-extrabold text-amber-500 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-            14 Days
-          </span>
+            <span className="text-xs font-mono font-extrabold text-amber-500 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
+            {streak} Days
+            </span>
         </div>
         <p className="text-xs text-muted-foreground leading-snug">
-          You are <strong>1 day away</strong> from earning the 15-Day Master Streaker badge & +300 bonus XP!
+          You are <strong>1 day away</strong> from earning the {streak + 1}-Day Master Streaker badge &amp; +300 bonus XP!
         </p>
         <div className="grid grid-cols-7 gap-1 pt-1">
           {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
@@ -113,23 +111,21 @@ export function RightSidebar() {
         </h3>
 
         <div className="space-y-2">
-          {[
-            { title: "DSA Lab #4 Submission", course: "DSA 201", due: "Tomorrow, 11:59 PM", urgency: "high" },
-            { title: "RAG Pipeline Sprint Review", course: "AI Web Eng", due: "Friday, 4:00 PM", urgency: "medium" },
-            { title: "Docker Container Lab Quiz", course: "DevOps", due: "Sunday, 6:00 PM", urgency: "normal" },
-          ].map((d, idx) => (
+          {MOCK_ASSIGNMENTS.filter(a => a.status === "pending").map((d, idx) => (
             <div key={idx} className="p-3 rounded-xl bg-card border border-border space-y-1">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-foreground truncate max-w-[170px]">{d.title}</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                  d.urgency === "high" ? "bg-red-500/15 text-red-500" : "bg-purple-500/15 text-purple-500"
+                  d.priority === "high" ? "bg-red-500/15 text-red-500" : "bg-purple-500/15 text-purple-500"
                 }`}>
-                  {d.due.split(",")[0]}
+                  {d.priority === "high" ? "Urgent" : "Soon"}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground flex items-center justify-between">
                 <span>{d.course}</span>
-                <span className="font-mono text-[10px] text-slate-400">{d.due}</span>
+                <span className="font-mono text-[10px] text-slate-400">
+                  {new Date(d.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
               </p>
             </div>
           ))}

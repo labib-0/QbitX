@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Award, CheckCircle2, Lock, Download, Share2, Eye, ShieldCheck, Sparkles } from "lucide-react";
+import { Award, CheckCircle2, Lock, Download, Share2, Eye, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/context/authContext";
 
 export function CertificatesWidget() {
+  const { user } = useAuth();
   const [selectedCert, setSelectedCert] = useState<any>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const certificates = [
     {
@@ -94,7 +97,11 @@ export function CertificatesWidget() {
 
               <button
                 disabled={cert.status === "Locked"}
-                onClick={() => alert(`Downloading Certificate PDF for ${cert.title}...`)}
+                onClick={() => {
+                  // Open preview then trigger print
+                  setSelectedCert(cert);
+                  setTimeout(() => window.print(), 400);
+                }}
                 className="p-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground transition-colors disabled:opacity-40"
                 title="Download PDF"
               >
@@ -103,11 +110,25 @@ export function CertificatesWidget() {
 
               <button
                 disabled={cert.status === "Locked"}
-                onClick={() => alert(`Certificate link copied to clipboard!`)}
-                className="p-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground transition-colors disabled:opacity-40"
-                title="Share Certificate"
+                onClick={() => {
+                  const link = `https://qbitx.vercel.app/credentials/${cert.credentialId}`;
+                  navigator.clipboard.writeText(link).then(() => {
+                    setCopiedId(cert.id);
+                    setTimeout(() => setCopiedId(null), 2000);
+                  });
+                }}
+                className={`p-2 rounded-xl transition-colors disabled:opacity-40 ${
+                  copiedId === cert.id
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-muted hover:bg-muted/80 text-foreground"
+                }`}
+                title={copiedId === cert.id ? "Copied!" : "Share Certificate"}
               >
-                <Share2 className="h-4 w-4" />
+                {copiedId === cert.id ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <Share2 className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -129,7 +150,7 @@ export function CertificatesWidget() {
               <ShieldCheck className="h-12 w-12 mx-auto text-sky-500 animate-pulse" />
               <span className="text-xs font-extrabold uppercase tracking-widest text-sky-600 dark:text-sky-400">Official QbitX Certificate of Completion</span>
               <h2 className="text-2xl font-black text-foreground font-heading">{selectedCert.title}</h2>
-              <p className="text-xs text-muted-foreground">This is to certify that <strong>Labib</strong> has successfully mastered all modules and practical assessments.</p>
+              <p className="text-xs text-muted-foreground">This is to certify that <strong>{user?.name || "Student"}</strong> has successfully mastered all modules and practical assessments.</p>
 
               <div className="pt-4 flex items-center justify-between text-xs text-muted-foreground border-t border-border">
                 <span>Credential ID: <strong className="font-mono text-foreground">{selectedCert.credentialId}</strong></span>
@@ -139,7 +160,7 @@ export function CertificatesWidget() {
 
             <div className="flex justify-center gap-3">
               <button onClick={() => setSelectedCert(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-muted text-foreground">Close</button>
-              <button onClick={() => alert("Downloading PDF Certificate...")} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-sky-500 text-white hover:bg-sky-600">Download Official PDF</button>
+              <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-sky-500 text-white hover:bg-sky-600">Download Official PDF</button>
             </div>
           </div>
         </div>

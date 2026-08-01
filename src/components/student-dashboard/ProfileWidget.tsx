@@ -6,13 +6,13 @@ import { User, Mail, Building2, GraduationCap, Globe, Sparkles, CheckCircle2 } f
 import Image from "next/image";
 
 export function ProfileWidget() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [profile, setProfile] = useState({
-    name: user?.name || "Labib",
+    name: user?.name || "Student",
     email: user?.email || "student@qbitx.com",
-    university: "Stanford University",
-    department: "Computer Science & Engineering",
+    university: user?.university || "Stanford University",
+    department: user?.department || "Computer Science & Engineering",
     academicYear: "Senior (4th Year)",
     bio: "Passionate full-stack developer focusing on RAG pipelines, distributed systems, and modern Next.js SaaS platforms.",
     github: "github.com/labib-dev",
@@ -25,6 +25,8 @@ export function ProfileWidget() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    // Persist name to AuthContext (updates localStorage + in-memory session)
+    updateUser({ name: profile.name });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

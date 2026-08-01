@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Settings, Shield, Bell, Trash2, Lock, Moon, Sun } from "lucide-react";
+import { Settings, Bell, Trash2, Moon } from "lucide-react";
+import { useAuth } from "@/context/authContext";
+import { useRouter } from "next/navigation";
 
 export function SettingsWidget() {
+  const { logout } = useAuth();
+  const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [passNotifs, setPassNotifs] = useState(true);
+  const [deleting, setDeleting] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -96,7 +101,21 @@ export function SettingsWidget() {
             </p>
             <div className="flex gap-2">
               <button onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-xl bg-muted py-2.5 text-xs font-bold text-foreground">Cancel</button>
-              <button onClick={() => { alert("Account deleted. Redirecting..."); setShowDeleteModal(false); }} className="flex-1 rounded-xl bg-red-500 text-white py-2.5 text-xs font-bold hover:bg-red-600">Delete Permanently</button>
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await logout();
+                  } finally {
+                    setShowDeleteModal(false);
+                    router.push("/login/student");
+                  }
+                }}
+                disabled={deleting}
+                className="flex-1 rounded-xl bg-red-500 text-white py-2.5 text-xs font-bold hover:bg-red-600 disabled:opacity-60 transition-colors"
+              >
+                {deleting ? "Logging out..." : "Delete Permanently"}
+              </button>
             </div>
           </div>
         </div>

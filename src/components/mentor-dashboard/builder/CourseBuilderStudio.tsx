@@ -22,7 +22,7 @@ interface CourseBuilderStudioProps {
 
 export function CourseBuilderStudio({ courseId = "crs-1" }: CourseBuilderStudioProps) {
   const [course, setCourse] = useState<Course>(
-    ContentRetrievalService.getCourseById(courseId, "mentor") || ContentRetrievalService.getCourses(undefined, "mentor")[0]
+    ContentRetrievalService.getCourseByIdOrSlug(courseId, "mentor") || ContentRetrievalService.getCourses(undefined, "mentor")[0]
   );
 
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -37,7 +37,7 @@ export function CourseBuilderStudio({ courseId = "crs-1" }: CourseBuilderStudioP
 
   const handleAddModule = () => {
     ContentAuthoringService.addModule(course.id, `New Module ${course.moduleIds.length + 1}`);
-    setCourse({ ...ContentRetrievalService.getCourseById(course.id, "mentor")! });
+    setCourse({ ...ContentRetrievalService.getCourseByIdOrSlug(course.id, "mentor")! });
   };
 
   const handleSelectLessonType = (type: ActivityType) => {

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "validate_publishing") {
-      const course = ContentRetrievalService.getCourseById(courseId || "crs-1", "mentor");
+      const course = ContentRetrievalService.getCourseByIdOrSlug(courseId || "crs-1", "mentor");
       if (!course) return NextResponse.json({ success: false, error: "Course not found" }, { status: 404 });
 
       const validation = PublishingValidationEngine.validateCourse(course);

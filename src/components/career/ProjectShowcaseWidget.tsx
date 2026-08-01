@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { CareerProject } from "@/types/career";
-import { ExternalLink, Github, Users, Award, Code2 } from "lucide-react";
+import { ExternalLink, GitBranch, Users, Award, Code2 } from "lucide-react";
 
 export function ProjectShowcaseWidget({ projects }: { projects: CareerProject[] }) {
   return (
@@ -66,7 +66,7 @@ export function ProjectShowcaseWidget({ projects }: { projects: CareerProject[] 
                   rel="noopener noreferrer"
                   className="flex-1 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-extrabold text-center flex items-center justify-center gap-1.5 transition-colors border border-border"
                 >
-                  <Github className="h-3.5 w-3.5" />
+                  <GitBranch className="h-3.5 w-3.5" />
                   <span>GitHub Repo</span>
                 </a>
               )}

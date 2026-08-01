@@ -4,7 +4,7 @@ import { use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CareerService } from "@/services/career/CareerService";
-import { Award, Code, Star, ExternalLink, Github, Globe, ShieldCheck } from "lucide-react";
+import { Award, Code, Star, ExternalLink, Globe, ShieldCheck } from "lucide-react";
 
 export default function PublicPortfolioPage({ params }: { params: Promise<{ username: string }> }) {
   const resolvedParams = use(params);

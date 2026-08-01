@@ -15,7 +15,11 @@ export interface AuditLogEntry {
     | "CERTIFICATE_REVOKED"
     | "STUDENT_INTERVENTION_CREATED"
     | "OFFICE_HOURS_SCHEDULED"
-    | "COURSE_PUBLISHED";
+    | "COURSE_PUBLISHED"
+    | "USER_SUSPENDED"
+    | "MENTOR_APPROVED"
+    | "ROLE_CHANGED"
+    | "SETTINGS_UPDATED";
   targetId: string;
   targetType: "assignment" | "certificate" | "student" | "office_hour" | "course";
   details: string;

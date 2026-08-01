@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { PlayCircle, BookOpen, CheckCircle2, Award, Sparkles, ChevronDown, Star, Clock } from "lucide-react";
 
 interface RunningCourseCardProps {
@@ -106,13 +107,13 @@ export function RunningCourseCard({ onContinueCourse, onViewOutline }: RunningCo
 
           {/* Primary Action Buttons */}
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <button
-              onClick={onContinueCourse}
+            <Link
+              href="/student/workspace?courseId=crs-1&lessonId=les-1"
               className="inline-flex items-center gap-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 text-xs font-extrabold transition-all shadow-md shadow-sky-500/20 hover:scale-[1.02]"
             >
               <PlayCircle className="h-4.5 w-4.5" />
-              <span>Continue Course</span>
-            </button>
+              <span>Continue Course Workspace</span>
+            </Link>
 
             <button
               onClick={onViewOutline}

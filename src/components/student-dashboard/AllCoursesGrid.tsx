@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight, BookOpen, X, PlayCircle, Clock, CheckCircle2, BarChart2 } from "lucide-react";
 
 interface CourseCardItem {
@@ -226,13 +227,13 @@ export function AllCoursesGrid() {
                 >
                   Close
                 </button>
-                <button
-                  onClick={() => setSelectedCourse(null)}
+                <Link
+                  href={`/student/workspace?courseId=${selectedCourse.id}&lessonId=les-1`}
                   className="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-600 text-white transition-colors flex items-center justify-center gap-2 shadow-md shadow-sky-500/20"
                 >
                   <PlayCircle className="h-4 w-4" />
-                  Resume Course
-                </button>
+                  Launch Workspace
+                </Link>
               </div>
             </div>
           </div>

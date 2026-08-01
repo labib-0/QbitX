@@ -22,6 +22,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
 import { HelpDeskModal } from "./HelpDeskModal";
+import { GuidedOnboardingTour } from "@/components/onboarding/GuidedOnboardingTour";
+import { GlobalOmniboxSearch } from "@/components/search/GlobalOmniboxSearch";
 import type { Notification, SearchResult } from "@/lib/dashboardData";
 
 interface TopNavbarProps {
@@ -494,6 +496,11 @@ export function TopNavbar({
           </div>
         </div>
       )}
+      {/* Guided Onboarding Walkthrough */}
+      <GuidedOnboardingTour role="student" />
+
+      {/* Global Omnibox Search Modal */}
+      <GlobalOmniboxSearch isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
     </>
   );
 }

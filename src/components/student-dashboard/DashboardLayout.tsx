@@ -17,6 +17,7 @@ import { CertificatesWidget } from "./CertificatesWidget";
 import { ProfileWidget } from "./ProfileWidget";
 import { SettingsWidget } from "./SettingsWidget";
 import { HelpDeskModal } from "./HelpDeskModal";
+import { AchievementsWidget } from "./AchievementsWidget";
 
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
@@ -82,45 +83,37 @@ export function StudentDashboardLayout() {
           {activeTab === "Dashboard" && (
             <div className="flex flex-col lg:flex-row items-start gap-8">
               
-              {/* Main Workspace Segment (Fills 100% available space dynamically) */}
+              {/* Main Workspace Segment */}
               <div className="flex-1 min-w-0 space-y-8 w-full">
-                
-                {/* 1. Running Course / Last Access Course Hero Card */}
+                {/* 1. Running Course Hero Card */}
                 <RunningCourseCard
-                  onContinueCourse={() => alert("Continuing Introduction to Programming Language")}
-                  onViewOutline={() => alert("Viewing Course Outline")}
+                  onContinueCourse={() => setActiveTab("My Learning")}
+                  onViewOutline={() => setActiveTab("My Learning")}
                 />
 
                 {/* 2. Module Finish Track Bar */}
                 <ModuleTrackBar />
 
-                {/* 3. All Courses Grid Section (Scales dynamically up to 4 columns!) */}
+                {/* 3. All Courses Grid */}
                 <AllCoursesGrid />
 
-                {/* 4. Quick Action Tiles Grid (My Team, Certificates, My Courses, Profile) */}
+                {/* 4. Quick Action Tiles */}
                 <QuickTilesGrid onSelectTab={(tab) => setActiveTab(tab)} />
-
               </div>
 
-              {/* Right Notice & Deadlines Segment (Fixed Width Sidebar) */}
+              {/* Right Notice & Deadlines Segment */}
               <div className="w-full lg:w-80 xl:w-96 2xl:w-[400px] shrink-0 space-y-6 lg:sticky lg:top-20">
-                
-                {/* Notice Panel */}
                 <NoticePanel />
-
-                {/* Today's Tasks & Deadlines Checklist */}
                 <RightSidebar />
-
               </div>
-
             </div>
           )}
 
           {activeTab === "My Learning" && (
             <>
               <RunningCourseCard
-                onContinueCourse={() => alert("Continuing Introduction to Programming Language")}
-                onViewOutline={() => alert("Viewing Course Outline")}
+                onContinueCourse={() => setActiveTab("My Learning")}
+                onViewOutline={() => setActiveTab("My Learning")}
               />
               <AllCoursesGrid />
             </>
@@ -131,6 +124,7 @@ export function StudentDashboardLayout() {
           {activeTab === "Certificates" && <CertificatesWidget />}
           {activeTab === "Settings" && <SettingsWidget />}
           {activeTab === "Profile" && <ProfileWidget />}
+          {activeTab === "Achievements" && <AchievementsWidget />}
 
         </main>
 

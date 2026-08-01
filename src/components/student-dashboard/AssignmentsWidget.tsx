@@ -7,6 +7,8 @@ export function AssignmentsWidget() {
   const [filter, setFilter] = useState<"Upcoming" | "Submitted" | "Overdue" | "Grades">("Upcoming");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
+  const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const assignments = [
     {
@@ -58,7 +60,8 @@ export function AssignmentsWidget() {
 
   const filtered = assignments.filter((a) => {
     if (filter === "Grades") return a.grade !== null;
-    return a.status === filter;
+    if (filter === "Submitted") return a.status === "Submitted" || submittedIds.has(a.id);
+    return a.status === filter && !submittedIds.has(a.id);
   });
 
   return (
@@ -158,12 +161,24 @@ export function AssignmentsWidget() {
               <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 rounded-xl text-xs font-bold bg-muted text-foreground">Cancel</button>
               <button
                 onClick={() => {
-                  alert("Assignment uploaded successfully! Simulated submission saved.");
-                  setShowUploadModal(false);
+                  if (selectedAssignment) {
+                    // find the id for the selected assignment title
+                    const found = assignments.find(a => a.title === selectedAssignment);
+                    if (found) setSubmittedIds((prev) => new Set(prev).add(found.id));
+                  }
+                  setSubmitSuccess(true);
+                  setTimeout(() => {
+                    setSubmitSuccess(false);
+                    setShowUploadModal(false);
+                  }, 1500);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 text-white hover:bg-sky-600"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+                  submitSuccess
+                    ? "bg-emerald-500 text-white"
+                    : "bg-sky-500 text-white hover:bg-sky-600"
+                }`}
               >
-                Confirm Submission
+                {submitSuccess ? "✓ Submitted!" : "Confirm Submission"}
               </button>
             </div>
           </div>

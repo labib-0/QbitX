@@ -12,7 +12,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
-  Headphones
+  Headphones,
+  Trophy
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,7 @@ export function LeftSidebar({
     { name: "Learning Families", label: "My Team", icon: Users },
     { name: "Assignments", label: "Assignments", icon: CheckCircle2 },
     { name: "Certificates", label: "Certificates", icon: Award },
+    { name: "Achievements", label: "Achievements", icon: Trophy },
     { name: "Settings", label: "Settings", icon: Settings },
   ];
 

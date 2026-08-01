@@ -7,7 +7,7 @@ export interface AuditLogEntry {
   id: string;
   actorId: string;
   actorName: string;
-  actorRole: "student" | "mentor" | "admin";
+  actorRole: "student" | "mentor" | "admin" | "super_admin" | "platform_admin" | "academic_admin";
   actionType:
     | "ASSIGNMENT_GRADED"
     | "FEEDBACK_SENT"

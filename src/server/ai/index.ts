@@ -173,12 +173,19 @@ export async function generateAIResponse({
   }
 
   console.error("Gemini AI generation error:", lastError);
+  const providerStatus = getProviderStatus(lastError);
+  const hint =
+    providerStatus === 401 || providerStatus === 403
+      ? "Google rejected the Gemini API key. If your key starts with `AQ.`, open Google Cloud Console → APIs & Services → Credentials, edit the key, set its API restrictions to **Generative Language API**, and save (allow a minute). Otherwise create a new key at https://aistudio.google.com/apikey and update `GOOGLE_GENERATIVE_AI_API_KEY` in your deployment environment, then redeploy."
+      : providerStatus === 429
+        ? "The Gemini API quota has been reached. Check your usage and limits at https://aistudio.google.com/."
+        : "Please try again in a moment. If this persists, verify the Gemini API key and model configuration in your deployment environment.";
+
   return {
-    content:
-      "⚠️ **AI service is temporarily unavailable.** Please try again in a moment. If this persists, verify the Gemini API key and model configuration in your deployment environment.",
+    content: `⚠️ **AI service is temporarily unavailable.** ${hint}`,
     configured: true,
     model: "error",
-    providerStatus: getProviderStatus(lastError),
+    providerStatus,
   };
 }
 

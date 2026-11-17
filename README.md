@@ -84,6 +84,22 @@ Complete technical documentation is located under the [`/docs`](./docs) director
 
 ---
 
+## 🚀 Deploying to Vercel
+
+1. Create a Neon (or Vercel Postgres) database, then add these Environment Variables for **Production**:
+   - `DATABASE_URL` — pooled connection string
+   - `DATABASE_URL_UNPOOLED` — direct connection string (used by migrations)
+   - `BETTER_AUTH_SECRET` — 32+ random characters
+   - `BETTER_AUTH_URL` — `https://<your-domain>`
+   - `NEXT_PUBLIC_APP_URL` — `https://<your-domain>`
+   - `GOOGLE_GENERATIVE_AI_API_KEY` — optional, enables the AI mentor
+2. Deploy. The `vercel-build` script runs Drizzle migrations before `next build`, and the production build fails when `DATABASE_URL` is missing instead of shipping a broken app.
+3. Health check: `GET /api/health/db` returns `{"database":"reachable"}` with `200`, or a generic `503` when the database is unreachable.
+4. **Changing environment variables requires a redeploy** — existing deployments keep their old values.
+5. First administrator: run `npx tsx src/server/scripts/bootstrap-admin.ts` once with `DATABASE_URL` and the `INITIAL_ADMIN_*` variables set locally. Optional demo content: `npm run db:seed`.
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

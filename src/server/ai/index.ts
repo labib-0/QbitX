@@ -31,7 +31,6 @@ function rankModel(name: string): number {
 }
 
 let discoveryCache: { models: string[]; expiresAt: number } | null = null;
-let lastDiscovery: { status?: number; count: number } = { count: 0 };
 
 async function discoverGeminiModels(): Promise<string[]> {
   if (discoveryCache && discoveryCache.expiresAt > Date.now()) {
@@ -48,7 +47,6 @@ async function discoverGeminiModels(): Promise<string[]> {
     });
 
     if (!response.ok) {
-      lastDiscovery = { status: response.status, count: 0 };
       console.warn(`[ai] Gemini model discovery failed with status ${response.status}.`);
       return [];
     }
@@ -68,7 +66,6 @@ async function discoverGeminiModels(): Promise<string[]> {
       .sort((a: string, b: string) => rankModel(b) - rankModel(a));
 
     discoveryCache = { models, expiresAt: Date.now() + 60 * 60 * 1000 };
-    lastDiscovery = { status: response.status, count: models.length };
     return models;
   } catch (error) {
     console.warn("[ai] Gemini model discovery failed:", error);
@@ -201,15 +198,7 @@ export async function generateAIResponse({
   conversationHistory?: { role: "user" | "assistant" | "system"; content: string }[];
   context?: Record<string, any>;
   system?: string;
-}): Promise<{
-  content: string;
-  configured: boolean;
-  model: string;
-  providerStatus?: number;
-  providerMessage?: string;
-  attempts?: { model: string; status?: number; message?: string }[];
-  discovery?: { status?: number; count: number };
-}> {
+}): Promise<{ content: string; configured: boolean; model: string; providerStatus?: number }> {
   if (!isAIConfigured()) {
     return {
       content:
@@ -233,7 +222,6 @@ export async function generateAIResponse({
   ];
 
   let lastError: any = null;
-  const attempts: { model: string; status?: number; message?: string }[] = [];
 
   for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
@@ -251,11 +239,6 @@ export async function generateAIResponse({
       };
     } catch (error: any) {
       lastError = error;
-      attempts.push({
-        model: modelName,
-        status: getProviderStatus(error),
-        message: String(error?.message || error || "").slice(0, 160),
-      });
       if (isModelUnavailableError(error) || isTransientProviderError(error)) {
         console.warn(`[ai] Gemini model '${modelName}' is unavailable; trying the next candidate.`);
         continue;
@@ -279,9 +262,6 @@ export async function generateAIResponse({
     configured: true,
     model: "error",
     providerStatus,
-    providerMessage: String(lastError?.message || lastError || "").slice(0, 300),
-    attempts,
-    discovery: lastDiscovery,
   };
 }
 

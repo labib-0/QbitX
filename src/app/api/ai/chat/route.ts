@@ -114,9 +114,6 @@ export async function POST(request: NextRequest) {
         model: response.model,
         configured: response.configured,
         providerStatus: response.providerStatus,
-        providerMessage: response.providerMessage,
-        attempts: response.attempts,
-        discovery: response.discovery,
         timestamp: new Date().toISOString(),
       },
     });

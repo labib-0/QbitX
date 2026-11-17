@@ -2,13 +2,13 @@
 // POST /api/content/lessons -> Create/update lesson in database with strict YouTube validation
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireRole } from "@/server/auth/session";
+import { getServerSession, requireRole } from "@/server/auth/session";
+import { resolveContentRole } from "@/server/auth/content-role";
 import { db, schema } from "@/server/db";
 import { eq, asc } from "drizzle-orm";
 import { z } from "zod";
 import { extractYouTubeId } from "@/components/workspace/YouTubeVideoPlayer";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
-import { UserRole } from "@/types/content";
 
 const createLessonSchema = z.object({
   id: z.string().optional(),
@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const moduleId = searchParams.get("moduleId");
     const lessonId = searchParams.get("id");
-    const role = (searchParams.get("role") as UserRole) || "student";
+    // Role comes from the verified session, not from a client-supplied query param.
+    const role = resolveContentRole(await getServerSession());
 
     if (lessonId) {
       // 1. Check DB first

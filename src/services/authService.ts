@@ -47,7 +47,7 @@ export interface RegisterMentorParams {
   yearsOfExperience: string;
   areaOfExpertise: string;
   bio: string;
-  password?: string;
+  password: string;
   photoFile?: any;
   cvFile?: any;
   documentsFile?: any;
@@ -129,7 +129,7 @@ export class AuthService {
   static async registerMentor(params: RegisterMentorParams): Promise<UserProfile> {
     const res = await authClient.signUp.email({
       email: params.email,
-      password: params.password || "QbitXMentor2026!",
+      password: params.password,
       name: params.fullName,
     });
 

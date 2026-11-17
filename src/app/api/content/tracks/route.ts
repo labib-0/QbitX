@@ -2,13 +2,15 @@
 // POST /api/content/tracks -> Create/Draft a new track
 
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/server/auth/session";
+import { resolveContentRole } from "@/server/auth/content-role";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
-import { UserRole } from "@/types/content";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const role = (searchParams.get("role") as UserRole) || "student";
+    // Role comes from the verified session, not from a client-supplied query param.
+    const role = resolveContentRole(await getServerSession());
     const idOrSlug = searchParams.get("id") || searchParams.get("slug");
 
     if (idOrSlug) {

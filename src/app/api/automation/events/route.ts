@@ -1,21 +1,40 @@
 // POST /api/automation/events -> Publish platform events to EventBus
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/server/auth/session";
 import { EventBus } from "@/services/automation/EventBus";
+
+function authorizationErrorResponse(error: any) {
+  if (error?.name === "UnauthorizedError") {
+    return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+  }
+  if (error?.name === "ForbiddenError") {
+    return NextResponse.json({ success: false, error: error.message }, { status: 403 });
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { eventType, actorId, actorRole, targetId, targetType, data } = body;
+    // Automation events can trigger workflows, notifications, and audit trails.
+    // Only verified administrators may publish them, and the actor is taken
+    // from the session — never from the request body.
+    const context = await requireRole(["admin", "super_admin"]);
 
-    if (!eventType || !actorId) {
-      return NextResponse.json({ success: false, error: "eventType and actorId are required" }, { status: 400 });
+    const body = await request.json();
+    const { eventType, targetId, targetType, data } = body;
+
+    if (!eventType) {
+      return NextResponse.json(
+        { success: false, error: "eventType is required" },
+        { status: 400 }
+      );
     }
 
     const eventPayload = await EventBus.publish({
       eventType,
-      actorId,
-      actorRole: actorRole || "student",
+      actorId: context.user.id,
+      actorRole: context.user.role,
       targetId,
       targetType,
       data,
@@ -23,6 +42,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: eventPayload });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Event publishing failed" }, { status: 500 });
+    const authResponse = authorizationErrorResponse(error);
+    if (authResponse) return authResponse;
+
+    return NextResponse.json(
+      { success: false, error: error.message || "Event publishing failed" },
+      { status: 500 }
+    );
   }
 }

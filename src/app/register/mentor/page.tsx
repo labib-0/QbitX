@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { RoleSelector } from "@/components/auth/RoleSelector";
 import { ProfileUploader } from "@/components/auth/ProfileUploader";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 import { UniversitySelector } from "@/components/auth/UniversitySelector";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { SuccessModal } from "@/components/auth/SuccessModal";
@@ -20,6 +21,7 @@ export default function MentorRegisterPage() {
     university: "Stanford University",
     email: "",
     phone: "",
+    password: "",
     linkedin: "",
     github: "",
     portfolio: "",
@@ -53,6 +55,11 @@ export default function MentorRegisterPage() {
 
     if (!formData.fullName || !formData.email || !formData.phone || !formData.bio) {
       setError("Please complete all required fields marked with *.");
+      return;
+    }
+
+    if (!formData.password || formData.password.length < 8) {
+      setError("Please create a password of at least 8 characters.");
       return;
     }
 
@@ -179,6 +186,16 @@ export default function MentorRegisterPage() {
             />
           </div>
         </div>
+
+        {/* Account Password */}
+        <PasswordInput
+          id="mentor-password"
+          label="Create Account Password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          placeholder="At least 8 characters"
+          showStrengthMeter
+        />
 
         {/* Social / Portfolio Links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -221,7 +221,9 @@ describe("Database Verification & Integrity Suite", () => {
         });
       } catch (err: any) {
         errorThrown = true;
-        expect(err.message).toMatch(/duplicate key|unique constraint/i);
+        // Drizzle wraps driver failures, so inspect the underlying cause too.
+        const detail = `${err?.message ?? ""} ${err?.cause?.message ?? ""}`;
+        expect(detail).toMatch(/duplicate key|unique constraint/i);
       }
 
       expect(errorThrown).toBe(true);
@@ -261,7 +263,9 @@ describe("Database Verification & Integrity Suite", () => {
         });
       } catch (err: any) {
         fkError = true;
-        expect(err.message).toMatch(/foreign key constraint/i);
+        // Drizzle wraps driver failures, so inspect the underlying cause too.
+        const detail = `${err?.message ?? ""} ${err?.cause?.message ?? ""}`;
+        expect(detail).toMatch(/foreign key constraint/i);
       }
       expect(fkError).toBe(true);
 

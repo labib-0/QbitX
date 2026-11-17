@@ -2,6 +2,9 @@
   "name": "qbitx",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,10 +25,10 @@
     "@neondatabase/serverless": "^0.10.4",
     "@tailwindcss/oxide-linux-x64-gnu": "^4.3.5",
     "ai": "^4.1.45",
-    "better-auth": "^1.1.21",
+    "better-auth": "^1.7.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.39.3",
+    "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.25.0",
@@ -41,6 +44,7 @@
     "@electric-sql/pglite": "^0.5.16",
     "@playwright/test": "^1.50.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^20",

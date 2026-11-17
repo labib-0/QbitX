@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/authContext";
 import { AIService, AIMessage } from "@/services/AIService";
 import { ConversationThread } from "@/services/ai/IAIProvider";
@@ -106,7 +106,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
   const prompts = AIService.getSuggestedPrompts();
 
   // Handle sending message
-  const handleSend = async (textToSend?: string) => {
+  const handleSend = useCallback(async (textToSend?: string) => {
     const query = textToSend || inputPrompt;
     if (!query.trim() || loading) return;
 
@@ -153,7 +153,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
       setThinkingStage(null);
       setStreamingText(null);
     }
-  };
+  }, [inputPrompt, loading, activeThread.id, userName, courseTitle]);
 
   // Conversation thread operations
   const handleNewChat = () => {

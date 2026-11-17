@@ -93,8 +93,8 @@ export const MOCK_FEATURE_FLAGS: FeatureFlagItem[] = [
   { id: "flag-4", key: "maintenance_mode", name: "Platform Maintenance Mode", description: "Restrict non-admin access for system upgrades", isEnabled: false },
 ];
 
-let userStore: PlatformUserItem[] = [...MOCK_ADMIN_USERS];
-let appStore: MentorApplication[] = [...MOCK_MENTOR_APPLICATIONS];
+const userStore: PlatformUserItem[] = [...MOCK_ADMIN_USERS];
+const appStore: MentorApplication[] = [...MOCK_MENTOR_APPLICATIONS];
 
 export class AdminDataService {
   static getUsers(query?: string): PlatformUserItem[] {

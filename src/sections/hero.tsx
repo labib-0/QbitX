@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { ArrowRight, Bot, Code2, LineChart, Terminal, Calendar, Code, Database, Globe, Cpu } from "lucide-react"
 
+const PARTICLES = [
+  { Icon: Code, initialX: -120, targetX: 80, duration: 20, size: 48, left: "15%" },
+  { Icon: Database, initialX: 60, targetX: -60, duration: 18, size: 54, left: "30%" },
+  { Icon: Globe, initialX: -50, targetX: 110, duration: 22, size: 42, left: "45%" },
+  { Icon: Cpu, initialX: 140, targetX: -90, duration: 16, size: 50, left: "60%" },
+  { Icon: Code2, initialX: -80, targetX: 70, duration: 24, size: 46, left: "75%" },
+];
+
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden pt-24 pb-32 md:pt-32 md:pb-40 bg-background">
@@ -32,28 +40,26 @@ export function HeroSection() {
         />
 
         {/* Floating Tech Particles */}
-        {[Code, Database, Globe, Cpu, Code2].map((Icon, i) => (
+        {PARTICLES.map(({ Icon, initialX, targetX, duration, size, left }, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: "100vh", x: Math.random() * 400 - 200 }}
+            initial={{ opacity: 0, y: "100vh", x: initialX }}
             animate={{ 
               opacity: [0, 0.5, 0], 
               y: ["100vh", "-20vh"], 
-              x: Math.random() * 400 - 200,
+              x: targetX,
               rotate: [0, 360]
             }}
             transition={{
-              duration: 15 + Math.random() * 10,
+              duration,
               repeat: Infinity,
               ease: "linear",
               delay: i * 2.5
             }}
             className="absolute text-primary/30"
-            style={{
-              left: `${15 + i * 15}%`,
-            }}
+            style={{ left }}
           >
-            <Icon size={40 + Math.random() * 30} strokeWidth={1.5} />
+            <Icon size={size} strokeWidth={1.5} />
           </motion.div>
         ))}
       </div>

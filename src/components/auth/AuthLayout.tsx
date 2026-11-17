@@ -34,13 +34,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   const isLoginPage = pathname?.includes("/login");
   const isRegisterPage = pathname?.includes("/register");
 
-  const [currentQuote, setCurrentQuote] = useState(MOTIVATIONAL_QUOTES[0]);
-
-  useEffect(() => {
-    // Pick a random motivational quote on every page load/refresh
+  const [currentQuote] = useState(() => {
     const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
-    setCurrentQuote(MOTIVATIONAL_QUOTES[randomIndex]);
-  }, []);
+    return MOTIVATIONAL_QUOTES[randomIndex] || MOTIVATIONAL_QUOTES[0];
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground flex flex-col justify-between relative font-sans antialiased">

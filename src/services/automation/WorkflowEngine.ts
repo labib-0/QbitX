@@ -43,7 +43,7 @@ export const DEFAULT_WORKFLOW_RULES: WorkflowRule[] = [
   },
 ];
 
-let rulesStore: WorkflowRule[] = [...DEFAULT_WORKFLOW_RULES];
+const rulesStore: WorkflowRule[] = [...DEFAULT_WORKFLOW_RULES];
 
 export class WorkflowEngine {
   static init() {

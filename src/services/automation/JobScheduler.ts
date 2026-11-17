@@ -37,7 +37,7 @@ export const MOCK_SCHEDULED_JOBS: JobScheduleSpec[] = [
   },
 ];
 
-let jobsStore: JobScheduleSpec[] = [...MOCK_SCHEDULED_JOBS];
+const jobsStore: JobScheduleSpec[] = [...MOCK_SCHEDULED_JOBS];
 
 export class JobScheduler {
   static getJobs(): JobScheduleSpec[] {

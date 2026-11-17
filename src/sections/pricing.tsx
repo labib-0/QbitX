@@ -58,7 +58,7 @@ export function PricingSection() {
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Invest in your future. Start for free and upgrade when you're ready to accelerate your career.
+            Invest in your future. Start for free and upgrade when you&apos;re ready to accelerate your career.
           </p>
         </div>
 

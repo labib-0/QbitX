@@ -37,7 +37,7 @@ export const MOCK_AT_RISK_STUDENTS: AtRiskStudent[] = [
   },
 ];
 
-let atRiskStore: AtRiskStudent[] = [...MOCK_AT_RISK_STUDENTS];
+const atRiskStore: AtRiskStudent[] = [...MOCK_AT_RISK_STUDENTS];
 
 export class InterventionService {
   static getAtRiskStudents(): AtRiskStudent[] {

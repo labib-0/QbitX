@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         sessionContext.user.role === "super_admin");
 
     // 1. Fetch projects
-    let query = db.select().from(schema.projects);
+    const query = db.select().from(schema.projects);
 
     const conditions = [];
     if (!isElevated) {
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
       : projectList;
 
     // 2. Fetch user enrollments if authenticated
-    let userEnrollmentsMap = new Map<string, typeof schema.projectEnrollments.$inferSelect>();
-    let userSubmissionsCountMap = new Map<string, number>();
+    const userEnrollmentsMap = new Map<string, typeof schema.projectEnrollments.$inferSelect>();
+    const userSubmissionsCountMap = new Map<string, number>();
 
     if (sessionContext?.user?.id) {
       const enrollments = await db

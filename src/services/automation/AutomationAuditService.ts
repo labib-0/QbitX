@@ -5,7 +5,7 @@
 
 import { AutomationAuditLog } from "@/types/automation";
 
-let auditLogsStore: AutomationAuditLog[] = [
+const auditLogsStore: AutomationAuditLog[] = [
   {
     id: "auto-log-1",
     ruleId: "rule-course-complete",

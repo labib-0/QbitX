@@ -37,7 +37,7 @@ export function TestimonialsSection() {
     <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Don't Just Take Our Word For It</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Don&apos;t Just Take Our Word For It</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             See how QbitX is transforming students into industry-ready engineers.
           </p>
@@ -59,7 +59,7 @@ export function TestimonialsSection() {
                       <div>
                         <Quote className="h-8 w-8 text-primary/20 mb-4" />
                         <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                          "{t.content}"
+                          &ldquo;{t.content}&rdquo;
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

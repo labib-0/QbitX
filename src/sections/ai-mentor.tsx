@@ -25,7 +25,7 @@ export function AiMentorSection() {
               Never get stuck again with your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-400">Personal AI Mentor</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Unlike traditional courses where you wait days for a forum reply, QbitX gives you instant, contextual help. Our AI doesn't just write the code for you—it guides you to the solution so you actually learn.
+              Unlike traditional courses where you wait days for a forum reply, QbitX gives you instant, contextual help. Our AI doesn&apos;t just write the code for you—it guides you to the solution so you actually learn.
             </p>
             
             <ul className="space-y-4 pt-4">
@@ -74,7 +74,7 @@ export function AiMentorSection() {
                 {/* Code Panel */}
                 <div className="w-1/2 border-r bg-[#09090b] p-4 text-xs font-mono overflow-y-auto">
                   <pre className="text-zinc-300">
-<span className="text-purple-400">import</span> {"{"} useState, useEffect {"}"} <span className="text-purple-400">from</span> <span className="text-green-300">'react'</span>;
+<span className="text-purple-400">import</span> {"{"} useState, useEffect {"}"} <span className="text-purple-400">from</span> <span className="text-green-300">&apos;react&apos;</span>;
 
 <span className="text-purple-400">export default function</span> <span className="text-blue-300">WeatherApp</span>() {"{"}
   <span className="text-purple-400">const</span> [data, setData] = <span className="text-blue-300">useState</span>(<span className="text-cyan-300">null</span>);
@@ -110,7 +110,7 @@ export function AiMentorSection() {
                       </span>
                       <div className="bg-primary/10 border border-primary/20 text-sm p-3 rounded-2xl rounded-tl-sm max-w-[95%]">
                         I see the issue! Look at your <code>useEffect</code> on line 7. <br/><br/>
-                        Notice how it's missing a dependency array? Without it, the effect runs on <strong>every</strong> render, causing an infinite loop.
+                        Notice how it&apos;s missing a dependency array? Without it, the effect runs on <strong>every</strong> render, causing an infinite loop.
                         <br/><br/>
                         Try adding an empty array <code>[]</code> as the second argument.
                       </div>

@@ -35,7 +35,7 @@ export const MOCK_CERTIFICATE_ITEMS: CertificateApprovalItem[] = [
   },
 ];
 
-let certificateStore: CertificateApprovalItem[] = [...MOCK_CERTIFICATE_ITEMS];
+const certificateStore: CertificateApprovalItem[] = [...MOCK_CERTIFICATE_ITEMS];
 
 export class CertificateApprovalService {
   static getCertificateItems(): CertificateApprovalItem[] {

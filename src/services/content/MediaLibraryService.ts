@@ -60,7 +60,7 @@ export const MOCK_MEDIA_ASSETS: MediaAsset[] = [
   },
 ];
 
-let mediaStore: MediaAsset[] = [...MOCK_MEDIA_ASSETS];
+const mediaStore: MediaAsset[] = [...MOCK_MEDIA_ASSETS];
 
 export class MediaLibraryService {
   static getAssets(category?: string, query?: string): MediaAsset[] {

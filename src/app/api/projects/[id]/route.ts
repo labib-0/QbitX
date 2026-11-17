@@ -60,7 +60,7 @@ export async function GET(
 
     // 3. If authenticated, fetch user's enrollment, submissions, and reviews
     let enrollment = null;
-    let submissions: any[] = [];
+    const submissions: any[] = [];
 
     if (sessionContext?.user?.id) {
       const enrollments = await db

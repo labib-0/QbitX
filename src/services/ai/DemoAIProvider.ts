@@ -44,7 +44,7 @@ export class DemoAIProvider implements IAIProvider {
 
     // 2. Intent matching against Demo Knowledge Base
     const lowerPrompt = prompt.toLowerCase().trim();
-    let matchedItem = DEMO_KNOWLEDGE_ITEMS.find((item) =>
+    const matchedItem = DEMO_KNOWLEDGE_ITEMS.find((item) =>
       item.keywords.some((kw) => lowerPrompt.includes(kw))
     );
 

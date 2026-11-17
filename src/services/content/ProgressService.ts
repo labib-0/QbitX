@@ -10,7 +10,7 @@ import {
 } from "@/types/content";
 import { MOCK_PROGRESS, MOCK_COURSES, MOCK_LESSONS } from "@/lib/contentData";
 
-let progressStore: LearningProgress[] = [...MOCK_PROGRESS];
+const progressStore: LearningProgress[] = [...MOCK_PROGRESS];
 
 export class ProgressService {
   /**

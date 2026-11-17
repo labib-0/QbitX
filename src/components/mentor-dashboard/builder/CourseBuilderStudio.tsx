@@ -47,7 +47,13 @@ export function CourseBuilderStudio({ courseId = "crs-1" }: CourseBuilderStudioP
   };
 
   const handleConfirmPublish = () => {
-    course.metadata.status = "published";
+    setCourse((prev) => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        status: "published",
+      },
+    }));
     setPublishedLive(true);
     setShowPublishModal(false);
   };

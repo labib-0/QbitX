@@ -33,7 +33,7 @@ export const MOCK_OFFICE_HOURS: OfficeHourSession[] = [
   },
 ];
 
-let officeHourStore: OfficeHourSession[] = [...MOCK_OFFICE_HOURS];
+const officeHourStore: OfficeHourSession[] = [...MOCK_OFFICE_HOURS];
 
 export class CalendarOfficeHoursService {
   static getSessions(): OfficeHourSession[] {

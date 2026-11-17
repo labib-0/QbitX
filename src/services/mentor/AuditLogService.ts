@@ -5,7 +5,7 @@
 
 import { AuditLogEntry } from "@/types/success";
 
-let auditLogStore: AuditLogEntry[] = [
+const auditLogStore: AuditLogEntry[] = [
   {
     id: "log-1",
     actorId: "usr-mentor-1",

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get("role");
     const status = searchParams.get("status");
 
-    let query = db
+    const query = db
       .select({
         id: schema.users.id,
         name: schema.users.name,

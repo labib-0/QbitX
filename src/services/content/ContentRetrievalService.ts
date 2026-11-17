@@ -93,12 +93,12 @@ export class ContentRetrievalService {
    * Get lessons for a module ordered by orderIndex
    */
   static getLessonsForModule(moduleId: string, userRole: UserRole = "student"): Lesson[] {
-    const module = MOCK_MODULES.find((m) => m.id === moduleId);
-    if (!module) return [];
+    const targetModule = MOCK_MODULES.find((m) => m.id === moduleId);
+    if (!targetModule) return [];
 
     return MOCK_LESSONS.filter(
       (l) =>
-        module.lessonIds.includes(l.id) &&
+        targetModule.lessonIds.includes(l.id) &&
         ContentPermissionService.canUserAccessEntity(l.metadata.status, l.metadata.visibility, userRole)
     ).sort((a, b) => a.orderIndex - b.orderIndex);
   }

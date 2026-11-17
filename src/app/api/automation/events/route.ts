@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/server/auth/session";
 import { EventBus } from "@/services/automation/EventBus";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 function authorizationErrorResponse(error: any) {
   if (error?.name === "UnauthorizedError") {
@@ -45,9 +46,6 @@ export async function POST(request: NextRequest) {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Event publishing failed" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/automation/events");
   }
 }

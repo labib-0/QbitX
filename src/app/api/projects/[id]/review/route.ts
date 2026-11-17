@@ -3,6 +3,7 @@ import { requireRole } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const reviewSchema = z.object({
   submissionId: z.string().min(1, "Submission ID is required"),
@@ -145,9 +146,6 @@ export async function POST(
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to submit review" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]/review");
   }
 }

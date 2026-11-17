@@ -25,10 +25,13 @@ if (vercelEnv === "production" && isUsableDatabase) {
   // Fails the deployment on error rather than shipping a schema-less app.
   run("npx --no-install drizzle-kit migrate");
 } else if (vercelEnv === "production") {
-  console.warn(
-    "[qbitx-build] DATABASE_URL is not configured. Skipping migrations; " +
-      "database-backed routes will return 500 until it is set in Vercel."
+  console.error(
+    "[qbitx-build] DATABASE_URL is required for production deployments. " +
+      "Set DATABASE_URL and DATABASE_URL_UNPOOLED in Vercel, then redeploy."
   );
+  // Fail the deployment: a green production build with no database is a
+  // broken application (registration/login return 500).
+  process.exit(1);
 }
 
 run("npx --no-install next build");

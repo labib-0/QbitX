@@ -3,6 +3,7 @@ import { requireAdmin } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, or } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const updateMentorStatusSchema = z.object({
   mentorId: z.string().min(1, "Mentor ID is required"),
@@ -45,10 +46,7 @@ export async function GET(request: NextRequest) {
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch mentors" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/admin/mentors");
   }
 }
 
@@ -117,9 +115,6 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update mentor" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/admin/mentors");
   }
 }

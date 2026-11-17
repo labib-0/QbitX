@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/server/auth/session";
+import { internalErrorResponse } from "@/server/http/api-error";
 import { db, schema } from "@/server/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (error.name === "ZodError") {
       return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ error: error.message || "Failed to save profile." }, { status: 500 });
+    return internalErrorResponse(error, "/api/student/onboarding");
   }
 }
 
@@ -78,6 +79,6 @@ export async function GET() {
     if (error.name === "UnauthorizedError") {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
-    return NextResponse.json({ error: error.message || "Failed to load profile." }, { status: 500 });
+    return internalErrorResponse(error, "/api/student/onboarding");
   }
 }

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/server/auth/session";
 import { WorkflowEngine } from "@/services/automation/WorkflowEngine";
 import { AutomationAuditService } from "@/services/automation/AutomationAuditService";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 function authorizationErrorResponse(error: any) {
   if (error?.name === "UnauthorizedError") {
@@ -31,9 +32,6 @@ export async function GET() {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to load automation rules" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/automation/rules");
   }
 }

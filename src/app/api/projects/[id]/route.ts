@@ -3,6 +3,7 @@ import { getServerSession, requireRole, requireAdmin } from "@/server/auth/sessi
 import { db, schema } from "@/server/db";
 import { eq, or, and, asc, desc } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const updateProjectSchema = z.object({
   title: z.string().min(3).max(150).optional(),
@@ -120,10 +121,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch project details" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]");
   }
 }
 
@@ -161,10 +159,7 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ success: false, error: "Validation failed", details: error.errors }, { status: 400 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update project" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]");
   }
 }
 
@@ -193,9 +188,6 @@ export async function DELETE(
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete project" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]");
   }
 }

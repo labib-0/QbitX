@@ -5,6 +5,7 @@ import { getServerSession } from "@/server/auth/session";
 import { resolveContentRole } from "@/server/auth/content-role";
 import { ContentSearchService } from "@/services/content/ContentSearchService";
 import { Difficulty } from "@/types/content";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,6 +36,6 @@ export async function GET(request: NextRequest) {
       data: results,
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Content search failed" }, { status: 500 });
+    return internalErrorResponse(error, "/api/content/search");
   }
 }

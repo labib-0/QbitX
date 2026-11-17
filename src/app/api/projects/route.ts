@@ -3,6 +3,7 @@ import { getServerSession, requireRole } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, or, and, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const createProjectSchema = z.object({
   title: z.string().min(3).max(150),
@@ -138,10 +139,7 @@ export async function GET(request: NextRequest) {
       total: enrichedProjects.length,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch projects" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects");
   }
 }
 
@@ -193,9 +191,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ success: false, error: "Validation failed", details: error.errors }, { status: 400 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to create project" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects");
   }
 }

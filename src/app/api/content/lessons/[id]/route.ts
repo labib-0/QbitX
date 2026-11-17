@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, and } from "drizzle-orm";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET(
   request: NextRequest,
@@ -59,9 +60,6 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch lesson" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/lessons/[id]");
   }
 }

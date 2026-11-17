@@ -3,6 +3,7 @@ import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, or, and, desc } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const githubRepoRegex = /^https:\/\/(www\.)?github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(\/)?$/;
 
@@ -113,10 +114,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to submit project" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]/submit");
   }
 }
 
@@ -184,9 +182,6 @@ export async function GET(
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch submissions" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/projects/[id]/submit");
   }
 }

@@ -3,6 +3,7 @@ import { getServerSession, requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const mentorProfileSchema = z.object({
   headline: z.string().min(5, "Headline must be at least 5 characters").max(120),
@@ -70,10 +71,7 @@ export async function GET(request: NextRequest) {
       total: filteredMentors.length,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch mentors" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/mentors");
   }
 }
 
@@ -146,9 +144,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update mentor profile" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/mentors");
   }
 }

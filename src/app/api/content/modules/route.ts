@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/server/auth/session";
 import { resolveContentRole } from "@/server/auth/content-role";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const modules = ContentRetrievalService.getModulesForCourse(courseId, role);
     return NextResponse.json({ success: true, count: modules.length, data: modules });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Failed to fetch modules" }, { status: 500 });
+    return internalErrorResponse(error, "/api/content/modules");
   }
 }
 

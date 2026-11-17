@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ContentAuthoringService } from "@/services/content/ContentAuthoringService";
 import { PublishingValidationEngine } from "@/services/content/PublishingValidationEngine";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Builder API error" }, { status: 500 });
+    return internalErrorResponse(error, "/api/content/builder");
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, or, and } from "drizzle-orm";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 function escapeLatex(str: string): string {
   if (!str) return "";
@@ -211,9 +212,6 @@ ${coursesSection}
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to generate LaTeX CV" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/portfolio/cv/latex");
   }
 }

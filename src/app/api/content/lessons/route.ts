@@ -9,6 +9,7 @@ import { eq, asc } from "drizzle-orm";
 import { z } from "zod";
 import { extractYouTubeId } from "@/components/workspace/YouTubeVideoPlayer";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const createLessonSchema = z.object({
   id: z.string().optional(),
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: "Must specify moduleId or lessonId" }, { status: 400 });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Failed to fetch lesson data" }, { status: 500 });
+    return internalErrorResponse(error, "/api/content/lessons");
   }
 }
 
@@ -138,9 +139,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to create lesson" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/lessons");
   }
 }

@@ -4,6 +4,7 @@ import { generateAIResponse } from "@/server/ai";
 import { db, schema } from "@/server/db";
 import { and, eq, desc, asc } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const chatRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt cannot be empty").max(4000, "Prompt is too long"),
@@ -123,10 +124,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to process AI chat message" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/ai/chat");
   }
 }
 
@@ -176,9 +174,6 @@ export async function GET(request: NextRequest) {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch conversations" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/ai/chat");
   }
 }

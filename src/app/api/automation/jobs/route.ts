@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/server/auth/session";
 import { JobScheduler } from "@/services/automation/JobScheduler";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 function authorizationErrorResponse(error: any) {
   if (error?.name === "UnauthorizedError") {
@@ -22,10 +23,7 @@ export async function GET() {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to list jobs" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/automation/jobs");
   }
 }
 
@@ -39,9 +37,6 @@ export async function POST() {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Job execution failed" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/automation/jobs");
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, desc, and } from "drizzle-orm";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET() {
   try {
@@ -117,9 +118,6 @@ export async function GET() {
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to load dashboard data" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/student/dashboard");
   }
 }

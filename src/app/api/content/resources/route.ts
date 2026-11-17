@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ContentRetrievalService } from "@/services/content/ContentRetrievalService";
 import { MOCK_RESOURCES } from "@/lib/contentData";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, count: MOCK_RESOURCES.length, data: MOCK_RESOURCES });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return internalErrorResponse(error, "/api/content/resources");
   }
 }
 

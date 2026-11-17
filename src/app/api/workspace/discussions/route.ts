@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/server/auth/session";
 import { WorkspaceService } from "@/services/workspace/WorkspaceService";
+import { internalErrorResponse, badRequestResponse } from "@/server/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const threads = WorkspaceService.getDiscussions(lessonId);
     return NextResponse.json({ success: true, count: threads.length, data: threads });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return internalErrorResponse(error, "/api/workspace/discussions");
   }
 }
 
@@ -69,6 +70,6 @@ export async function POST(request: NextRequest) {
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return badRequestResponse(error, "/api/workspace/discussions");
   }
 }

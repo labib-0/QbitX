@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq } from "drizzle-orm";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 function authorizationErrorResponse(error: any) {
   if (error?.name === "UnauthorizedError") {
@@ -44,9 +45,6 @@ export async function GET() {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to load mentor status" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/mentors/me");
   }
 }

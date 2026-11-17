@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { LearningAnalytics } from "@/services/workspace/LearningAnalytics";
+import { badRequestResponse } from "@/server/http/api-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: event });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return badRequestResponse(error, "/api/workspace/events");
   }
 }

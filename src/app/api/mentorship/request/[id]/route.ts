@@ -3,6 +3,7 @@ import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const updateMentorshipSchema = z.object({
   status: z.enum(["pending", "accepted", "rejected", "completed", "cancelled"]).optional(),
@@ -123,9 +124,6 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update request" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/mentorship/request/[id]");
   }
 }

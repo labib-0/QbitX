@@ -4,6 +4,7 @@ import { generateAICodeReview } from "@/server/ai";
 import { db, schema } from "@/server/db";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const reviewSchema = z.object({
   code: z.string().min(5, "Code snippet must be at least 5 characters long").max(20000, "Code snippet is too large"),
@@ -47,10 +48,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to analyze code" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/ai/code-review");
   }
 }
 
@@ -70,9 +68,6 @@ export async function GET() {
     const authResponse = authorizationErrorResponse(error);
     if (authResponse) return authResponse;
 
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch code reviews" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/ai/code-review");
   }
 }

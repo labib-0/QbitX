@@ -3,6 +3,7 @@ import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const enrollSchema = z.object({
   courseId: z.string().min(1, "courseId is required"),
@@ -88,9 +89,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Enrollment failed" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/enroll");
   }
 }

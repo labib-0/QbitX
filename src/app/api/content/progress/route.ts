@@ -3,6 +3,7 @@ import { requireUser } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const progressSchema = z.object({
   lessonId: z.string().min(1, "lessonId is required"),
@@ -134,10 +135,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to record progress" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/progress");
   }
 }
 
@@ -166,9 +164,6 @@ export async function GET(request: NextRequest) {
     if (error.name === "UnauthorizedError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 401 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to query progress" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/progress");
   }
 }

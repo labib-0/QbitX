@@ -3,6 +3,7 @@ import { getServerSession, requireMentor, requireAdmin } from "@/server/auth/ses
 import { db, schema } from "@/server/db";
 import { eq, or, and, asc } from "drizzle-orm";
 import { z } from "zod";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 const updateCourseSchema = z.object({
   title: z.string().min(3).max(150).optional(),
@@ -111,10 +112,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch course details" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/courses/[id]");
   }
 }
 
@@ -161,9 +159,6 @@ export async function PATCH(
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update course" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/content/courses/[id]");
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/server/auth/session";
 import { db, schema } from "@/server/db";
 import { eq, sql, desc } from "drizzle-orm";
+import { internalErrorResponse } from "@/server/http/api-error";
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,9 +67,6 @@ export async function GET(request: NextRequest) {
     if (error.name === "ForbiddenError") {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 });
     }
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch admin stats" },
-      { status: 500 }
-    );
+    return internalErrorResponse(error, "/api/admin/stats");
   }
 }

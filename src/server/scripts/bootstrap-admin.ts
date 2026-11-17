@@ -11,6 +11,17 @@ export async function bootstrapAdmin() {
   const password = process.env.INITIAL_ADMIN_PASSWORD || "AdminPassword123!";
   const name = process.env.INITIAL_ADMIN_NAME || "System Super Admin";
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    (!process.env.INITIAL_ADMIN_PASSWORD ||
+      process.env.INITIAL_ADMIN_PASSWORD === "AdminPassword123!" ||
+      process.env.INITIAL_ADMIN_PASSWORD === "ChangeMeInProduction123!")
+  ) {
+    throw new Error(
+      "[QbitX Security] In production, INITIAL_ADMIN_PASSWORD must be explicitly provided and cannot use default/sample values."
+    );
+  }
+
   const existing = await db.select().from(schema.users).where(eq(schema.users.email, email));
 
   if (existing.length > 0) {

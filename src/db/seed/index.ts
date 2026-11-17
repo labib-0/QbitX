@@ -4,6 +4,12 @@ import { auth } from "../../server/auth";
 import { eq } from "drizzle-orm";
 
 export async function runSeed() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+    throw new Error(
+      "[QbitX Security] Refusing to run demo seed script in production. Demo seeds inject known credentials. To seed production curriculum, set ALLOW_PRODUCTION_SEED=true with customized INITIAL_ADMIN_PASSWORD."
+    );
+  }
+
   console.log("🌱 Starting QbitX database seed...");
   await ensureDbSchema();
 

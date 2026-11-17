@@ -6,6 +6,8 @@ import { and, eq, desc, asc } from "drizzle-orm";
 import { z } from "zod";
 import { internalErrorResponse } from "@/server/http/api-error";
 
+export const maxDuration = 60;
+
 const chatRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt cannot be empty").max(4000, "Prompt is too long"),
   conversationId: z.string().optional(),

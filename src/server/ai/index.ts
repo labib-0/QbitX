@@ -119,7 +119,7 @@ function isTransientProviderError(error: any): boolean {
   if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
     return true;
   }
-  return /high demand|temporar|overload|try again later|resource_exhausted|unavailable|timeout|ETIMEDOUT|ECONNRESET/i.test(
+  return /high demand|temporar|overload|try again later|resource_exhausted|unavailable|timeout|ETIMEDOUT|ECONNRESET|abort/i.test(
     String(error?.message || error || "")
   );
 }
@@ -187,13 +187,15 @@ export async function generateAIResponse({
   let lastError: any = null;
   const attempts: { model: string; status?: number }[] = [];
 
-  for (const modelName of (await getGeminiModelCandidates()).slice(0, 6)) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
       const result = await generateText({
         model: getGoogleProvider()(modelName),
         system: enrichedSystem,
         messages,
         temperature: 0.7,
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(15000),
       });
 
       return {
@@ -321,13 +323,15 @@ ${code}
   let resultText: string | null = null;
   let lastError: any = null;
 
-  for (const modelName of (await getGeminiModelCandidates()).slice(0, 6)) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
       const result = await generateText({
         model: getGoogleProvider()(modelName),
         system: "You are an expert Principal Software Engineer and AST/Security Code Reviewer. Return only valid JSON.",
         prompt,
         temperature: 0.2,
+        maxRetries: 0,
+        abortSignal: AbortSignal.timeout(15000),
       });
       resultText = result.text;
       break;

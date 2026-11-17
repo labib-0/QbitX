@@ -6,6 +6,8 @@ import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { internalErrorResponse } from "@/server/http/api-error";
 
+export const maxDuration = 60;
+
 const reviewSchema = z.object({
   code: z.string().min(5, "Code snippet must be at least 5 characters long").max(20000, "Code snippet is too large"),
   language: z.string().optional().default("typescript"),

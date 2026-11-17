@@ -50,18 +50,26 @@ Complete technical documentation is located under the [`/docs`](./docs) director
 2. **Configure Environment Variables**:
    Copy `.env.example` to `.env.local`:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   DATABASE_URL="postgresql://user:password@ep-sample-pooler.us-east-2.aws.neon.tech/qbitx?sslmode=require"
+   DATABASE_URL_UNPOOLED="postgresql://user:password@ep-sample.us-east-2.aws.neon.tech/qbitx?sslmode=require"
+   BETTER_AUTH_SECRET="replace-with-a-random-32-character-secret"
+   BETTER_AUTH_URL="http://localhost:3000"
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
+   ```
+   Without `DATABASE_URL` the app falls back to an embedded local PostgreSQL (PGlite) at `./.local-db`.
+
+3. **Apply Migrations & Seed Data**:
+   ```bash
+   npm run db:setup
    ```
 
-3. **Run Development Server**:
+4. **Run Development Server**:
    ```bash
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-4. **Production Build & Type Check Verification**:
+5. **Production Build & Type Check Verification**:
    ```bash
    npm run build
    ```
@@ -70,9 +78,9 @@ Complete technical documentation is located under the [`/docs`](./docs) director
 
 ## 👤 Verified Demo Accounts
 
-- **Student Role**: `student@qbitx.com` / Password: `demo-password`
-- **Mentor Role**: `mentor@qbitx.com` / Password: `demo-password`
-- **Super Admin Role**: `admin@qbitx.com` / Password: `demo-password`
+- **Student Role**: `student@qbitx.com` / Password: `StudentPassword123!`
+- **Mentor Role**: `sarah.chen@qbitx.com` / Password: `MentorPassword123!`
+- **Super Admin Role**: `admin@qbitx.com` / Password: `AdminPassword123!` (or `INITIAL_ADMIN_PASSWORD`)
 
 ---
 

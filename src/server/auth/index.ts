@@ -2,6 +2,45 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "../db";
 
+// Vercel exposes the stable production hostname and the per-deployment hostname.
+// Without these, a deployment without BETTER_AUTH_URL would sign sessions for
+// localhost and reject the real origin, breaking registration and login.
+const vercelOrigins = [
+  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  process.env.VERCEL_URL,
+]
+  .filter((host): host is string => Boolean(host))
+  .map((host) => (host.startsWith("http") ? host : `https://${host}`));
+
+const configuredAppUrl =
+  process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
+
+const appBaseURL =
+  configuredAppUrl ||
+  vercelOrigins[0] ||
+  "http://localhost:3000";
+
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3007",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3007",
+      configuredAppUrl,
+      process.env.NEXT_PUBLIC_APP_URL,
+      ...vercelOrigins,
+    ].filter((origin): origin is string => Boolean(origin))
+  )
+);
+
+if (process.env.NODE_ENV === "production" && !process.env.BETTER_AUTH_SECRET) {
+  console.warn(
+    "[QbitX Auth] BETTER_AUTH_SECRET is not set. Sessions are signed with the development fallback; set a strong secret in your deployment environment."
+  );
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -87,16 +126,8 @@ export const auth = betterAuth({
     },
   },
   secret: process.env.BETTER_AUTH_SECRET || "dev-secret-32-chars-minimum-qbitx-edtech-platform",
-  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  trustedOrigins: [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3007",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3007",
-    process.env.BETTER_AUTH_URL,
-    process.env.NEXT_PUBLIC_APP_URL,
-  ].filter(Boolean) as string[],
+  baseURL: appBaseURL,
+  trustedOrigins,
 });
 
 export type Session = typeof auth.$Infer.Session;

@@ -1,15 +1,59 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
-import { AdminDataService } from "@/services/admin/AdminDataService";
-import { AuditLogService } from "@/services/mentor/AuditLogService";
-import { Users, UserCheck, BookOpen, Crown, DollarSign, Activity, FileSpreadsheet, ChevronRight, TrendingUp } from "lucide-react";
+import { Users, UserCheck, BookOpen, Crown, Activity, FileSpreadsheet, ChevronRight, Loader2, Award } from "lucide-react";
 import Link from "next/link";
+
+interface AdminStats {
+  totalStudents: number;
+  totalMentors: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  totalSubmissions: number;
+  pendingReviews: number;
+  recentActivity: Array<{
+    id: string;
+    actionType: string;
+    action: string;
+    actorName?: string;
+    actorRole?: string;
+    details?: string;
+    createdAt: string;
+  }>;
+}
 
 export function PlatformOverviewWidget() {
   const { user } = useAuth();
   const name = user?.name || "System Admin";
-  const logs = AuditLogService.getLogs();
+
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setStats(json.data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load admin stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
+  const totalUsers = (stats?.totalStudents ?? 0) + (stats?.totalMentors ?? 0);
+  const totalCourses = stats?.totalCourses ?? 0;
+  const totalSubmissions = stats?.totalSubmissions ?? 0;
+  const pendingReviews = stats?.pendingReviews ?? 0;
+  const recentLogs = stats?.recentActivity ?? [];
 
   return (
     <div className="space-y-6">
@@ -23,17 +67,46 @@ export function PlatformOverviewWidget() {
           Executive Control Panel, <span className="text-amber-600 dark:text-amber-400">{name}</span>!
         </h1>
         <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
-          QbitX Platform Ecosystem is operating at <strong>99.98% uptime</strong> across <strong>1,420 enrolled students</strong>, <strong>24 verified senior mentors</strong>, and <strong>2 multi-tenant university partners</strong>.
+          QbitX Platform Ecosystem is operating across <strong>{stats?.totalStudents ?? 0} enrolled students</strong>,{" "}
+          <strong>{stats?.totalMentors ?? 0} verified mentors</strong>, and <strong>{totalCourses} active curriculum tracks</strong>.
         </p>
       </div>
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Platform Users", value: "1,444", desc: "1,420 Students • 24 Mentors", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { label: "Active Enrolled Courses", value: "4 Courses", desc: "100% published status", icon: BookOpen, color: "text-purple-500", bg: "bg-purple-500/10" },
-          { label: "Monthly Platform Revenue", value: "$24,800 USD", desc: "+14.2% MRR growth", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-          { label: "System Health & Uptime", value: "99.98%", desc: "Avg API latency: 14ms", icon: Activity, color: "text-sky-500", bg: "bg-sky-500/10" },
+          {
+            label: "Total Registered Users",
+            value: isLoading ? "..." : `${totalUsers}`,
+            desc: `${stats?.totalStudents ?? 0} Students • ${stats?.totalMentors ?? 0} Mentors`,
+            icon: Users,
+            color: "text-amber-500",
+            bg: "bg-amber-500/10",
+          },
+          {
+            label: "Active Courses",
+            value: isLoading ? "..." : `${totalCourses} Courses`,
+            desc: "Published curriculum",
+            icon: BookOpen,
+            color: "text-purple-500",
+            bg: "bg-purple-500/10",
+          },
+          {
+            label: "Project Submissions",
+            value: isLoading ? "..." : `${totalSubmissions}`,
+            desc: `${pendingReviews} awaiting evaluation`,
+            icon: Award,
+            color: "text-emerald-500",
+            bg: "bg-emerald-500/10",
+          },
+          {
+            label: "System Status",
+            value: "Operational",
+            desc: "Database & Auth Active",
+            icon: Activity,
+            color: "text-sky-500",
+            bg: "bg-sky-500/10",
+          },
         ].map((card, idx) => {
           const Icon = card.icon;
           return (
@@ -67,16 +140,31 @@ export function PlatformOverviewWidget() {
           </div>
 
           <div className="space-y-3">
-            {logs.map((log) => (
-              <div key={log.id} className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between gap-3 text-xs">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider block">{log.actionType}</span>
-                  <p className="font-bold text-foreground">{log.details}</p>
-                  <p className="text-[10px] text-muted-foreground">Actor: <strong>{log.actorName}</strong> ({log.actorRole})</p>
-                </div>
-                <span className="text-[10px] font-mono text-muted-foreground shrink-0">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                <span className="text-xs">Loading audit activity...</span>
               </div>
-            ))}
+            ) : recentLogs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">No recent audit log activity.</p>
+            ) : (
+              recentLogs.map((log) => (
+                <div key={log.id} className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between gap-3 text-xs">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider block">
+                      {log.actionType || log.action || "SYSTEM"}
+                    </span>
+                    <p className="font-bold text-foreground">{log.details || log.action}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Actor: <strong>{log.actorName || "Admin"}</strong>
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                    {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -86,16 +174,22 @@ export function PlatformOverviewWidget() {
             <span className="text-xs font-bold text-amber-600 dark:text-amber-300 block">Quick Administrative Actions</span>
             <h4 className="font-extrabold text-sm text-foreground">Platform Governance Controls</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Review mentor applications, issue global broadcasts, configure feature flags, or inspect tenant health.
+              Review mentor applications, issue global broadcasts, configure feature flags, or inspect platform health.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Link href="/admin/mentors" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shadow-md shadow-amber-500/20 text-center block">
+            <Link
+              href="/admin/mentors"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold shadow-md shadow-amber-500/20 text-center block"
+            >
               Review Mentor Applications
             </Link>
-            <Link href="/admin/settings" className="w-full py-2.5 rounded-xl bg-muted text-foreground text-xs font-bold text-center block hover:bg-muted/80">
-              Manage Feature Flags
+            <Link
+              href="/admin/broadcasts"
+              className="w-full py-2.5 rounded-xl bg-muted text-foreground text-xs font-bold text-center block hover:bg-muted/80"
+            >
+              Global Announcements
             </Link>
           </div>
         </div>

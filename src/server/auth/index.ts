@@ -125,6 +125,9 @@ export const auth = betterAuth({
       },
     },
   },
+  rateLimit: {
+    enabled: process.env.NODE_ENV === "production" && process.env.ALLOW_PGLITE_TEST !== "true",
+  },
   secret: process.env.BETTER_AUTH_SECRET || "dev-secret-32-chars-minimum-qbitx-edtech-platform",
   baseURL: appBaseURL,
   trustedOrigins,

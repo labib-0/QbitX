@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Search, Trash2, Pin, Clock, Sparkles, Save, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Search, Trash2, Clock, Sparkles, X, Loader2 } from "lucide-react";
 import { StudentNote } from "@/types/workspace";
-import { WorkspaceService } from "@/services/workspace/WorkspaceService";
 
 interface NotesPanelProps {
   userId: string;
@@ -14,40 +13,89 @@ interface NotesPanelProps {
 
 export function NotesPanel({ userId, courseId, lessonId, onClose }: NotesPanelProps) {
   const [notes, setNotes] = useState<StudentNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchNotes = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspace/notes?lessonId=${encodeURIComponent(lessonId)}`);
+      if (!res.ok) throw new Error("Failed to load notes");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setNotes(json.data);
+      }
+    } catch (err: any) {
+      setError("Unable to load notes at this time.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [lessonId]);
 
   useEffect(() => {
-    setNotes(WorkspaceService.getNotes(userId, lessonId));
-  }, [userId, lessonId]);
+    fetchNotes();
+  }, [fetchNotes]);
 
-  const handleAddNote = (e: React.FormEvent) => {
+  const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newContent.trim()) return;
+    if (!newTitle.trim() || !newContent.trim() || isSaving) return;
 
-    const created = WorkspaceService.addNote({
-      userId,
-      courseId,
-      lessonId,
-      timestampSeconds: 145,
-      title: newTitle,
-      content: newContent,
-      tags: ["student-note"],
-      isPinned: false,
-      isShared: false,
-    });
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/workspace/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId,
+          lessonId,
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          tags: ["student-note"],
+          isPinned: false,
+          isShared: false,
+        }),
+      });
 
-    setNotes([created, ...notes]);
-    setNewTitle("");
-    setNewContent("");
-    setShowAddForm(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save note");
+      }
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        setNotes((prev) => [json.data, ...prev]);
+        setNewTitle("");
+        setNewContent("");
+        setShowAddForm(false);
+      }
+    } catch (err: any) {
+      setError(err.message || "Could not save note.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    WorkspaceService.deleteNote(id, userId);
-    setNotes(notes.filter((n) => n.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/workspace/notes?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setNotes((prev) => prev.filter((n) => n.id !== id));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to delete note.");
+      }
+    } catch {
+      setError("Failed to delete note.");
+    }
   };
 
   const filtered = notes.filter(
@@ -69,6 +117,12 @@ export function NotesPanel({ userId, courseId, lessonId, onClose }: NotesPanelPr
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {error && (
+          <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+            {error}
+          </div>
+        )}
 
         {/* Search & Add Trigger */}
         <div className="flex items-center gap-2 shrink-0">
@@ -99,6 +153,7 @@ export function NotesPanel({ userId, courseId, lessonId, onClose }: NotesPanelPr
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Note title..."
               required
+              disabled={isSaving}
               className="w-full rounded-xl bg-background border border-border px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
             />
             <textarea
@@ -107,18 +162,38 @@ export function NotesPanel({ userId, courseId, lessonId, onClose }: NotesPanelPr
               onChange={(e) => setNewContent(e.target.value)}
               placeholder="Write your note (supports Markdown)..."
               required
+              disabled={isSaving}
               className="w-full rounded-xl bg-background border border-border p-3 text-xs text-foreground focus:outline-none resize-none"
             />
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowAddForm(false)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-muted">Cancel</button>
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white hover:bg-sky-600">Save Note</button>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                disabled={isSaving}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500 text-white hover:bg-sky-600 flex items-center gap-1.5"
+              >
+                {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Save Note
+              </button>
             </div>
           </form>
         )}
 
         {/* Notes List */}
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+              <p className="text-xs">Loading notes...</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">No notes saved yet.</p>
           ) : (
             filtered.map((note) => (
@@ -132,7 +207,7 @@ export function NotesPanel({ userId, courseId, lessonId, onClose }: NotesPanelPr
                 <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap">{note.content}</p>
                 {note.timestampSeconds && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                    <Clock className="h-3 w-3" /> @ 2:25
+                    <Clock className="h-3 w-3" /> @ {Math.floor(note.timestampSeconds / 60)}:{(note.timestampSeconds % 60).toString().padStart(2, "0")}
                   </span>
                 )}
               </div>

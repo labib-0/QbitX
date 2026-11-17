@@ -180,3 +180,34 @@ export async function GET(request: NextRequest) {
     return internalErrorResponse(error, "/api/ai/chat");
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { user } = await requireUser();
+    const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get("conversationId");
+
+    if (!conversationId) {
+      return NextResponse.json(
+        { success: false, error: "conversationId is required" },
+        { status: 400 }
+      );
+    }
+
+    await db
+      .delete(schema.aiConversations)
+      .where(
+        and(
+          eq(schema.aiConversations.id, conversationId),
+          eq(schema.aiConversations.userId, user.id)
+        )
+      );
+
+    return NextResponse.json({ success: true, message: "Conversation deleted" });
+  } catch (error: any) {
+    const authResponse = authorizationErrorResponse(error);
+    if (authResponse) return authResponse;
+
+    return internalErrorResponse(error, "/api/ai/chat");
+  }
+}

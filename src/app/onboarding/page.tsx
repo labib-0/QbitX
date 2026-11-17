@@ -115,7 +115,7 @@ export default function OnboardingPage() {
         });
         updateUser({ onboardingCompleted: true });
       }
-      router.push("/dashboard/student");
+      router.push("/student/dashboard");
     } catch (e) {
       console.error(e);
     } finally {

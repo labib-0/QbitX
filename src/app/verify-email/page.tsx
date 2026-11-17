@@ -37,13 +37,13 @@ function VerifyEmailContent() {
         if (!isMounted) return;
 
         if (res.error) {
-          setError(res.error.message || "Email verification token is invalid or expired.");
+          setError("Email verification token is invalid or expired.");
         } else {
           setIsVerified(true);
         }
       } catch (err: any) {
         if (isMounted) {
-          setError(err.message || "Failed to verify email token. Please try again.");
+          setError("Email verification token is invalid or expired.");
         }
       } finally {
         if (isMounted) {

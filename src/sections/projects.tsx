@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -67,7 +68,7 @@ export function ProjectsSection() {
               Stop watching tutorials. Start building the applications that employers actually want to see on your resume.
             </p>
           </div>
-          <Button variant="outline" className="rounded-full">
+          <Button variant="outline" className="rounded-full" render={<Link href="/register/student" />}>
             View All Projects <ArrowUpRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -115,7 +116,7 @@ export function ProjectsSection() {
                   ))}
                 </div>
                 
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors" render={<Link href="/register/student" />}>
                   View Details
                 </Button>
               </div>

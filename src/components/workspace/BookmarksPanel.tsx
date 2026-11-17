@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Bookmark as BookmarkIcon, Trash2, Clock, Code2, ExternalLink, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Bookmark as BookmarkIcon, Trash2, Clock, X, Loader2 } from "lucide-react";
 import { Bookmark } from "@/types/workspace";
-import { WorkspaceService } from "@/services/workspace/WorkspaceService";
 
 interface BookmarksPanelProps {
   userId: string;
@@ -13,14 +12,43 @@ interface BookmarksPanelProps {
 
 export function BookmarksPanel({ userId, lessonId, onClose }: BookmarksPanelProps) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBookmarks = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspace/bookmarks?lessonId=${encodeURIComponent(lessonId)}`);
+      if (!res.ok) throw new Error("Failed to load bookmarks");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setBookmarks(json.data);
+      }
+    } catch {
+      setError("Unable to load bookmarks.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [lessonId]);
 
   useEffect(() => {
-    setBookmarks(WorkspaceService.getBookmarks(userId, lessonId));
-  }, [userId, lessonId]);
+    fetchBookmarks();
+  }, [fetchBookmarks]);
 
-  const handleRemove = (id: string) => {
-    WorkspaceService.removeBookmark(id, userId);
-    setBookmarks(bookmarks.filter((b) => b.id !== id));
+  const handleRemove = async (id: string) => {
+    try {
+      const res = await fetch(`/api/workspace/bookmarks?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setBookmarks((prev) => prev.filter((b) => b.id !== id));
+      } else {
+        setError("Failed to remove bookmark.");
+      }
+    } catch {
+      setError("Failed to remove bookmark.");
+    }
   };
 
   return (
@@ -36,8 +64,19 @@ export function BookmarksPanel({ userId, lessonId, onClose }: BookmarksPanelProp
           </button>
         </div>
 
+        {error && (
+          <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+            {error}
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
-          {bookmarks.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+              <p className="text-xs">Loading bookmarks...</p>
+            </div>
+          ) : bookmarks.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">No bookmarks added.</p>
           ) : (
             bookmarks.map((bm) => (
@@ -51,7 +90,7 @@ export function BookmarksPanel({ userId, lessonId, onClose }: BookmarksPanelProp
 
                 {bm.timestampSeconds && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                    <Clock className="h-3 w-3" /> Timestamp @ 5:20
+                    <Clock className="h-3 w-3" /> Timestamp @ {Math.floor(bm.timestampSeconds / 60)}:{(bm.timestampSeconds % 60).toString().padStart(2, "0")}
                   </span>
                 )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/authContext";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { YouTubeVideoPlayer } from "./YouTubeVideoPlayer";
@@ -8,7 +8,9 @@ import { NotesPanel } from "./NotesPanel";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { DiscussionsPanel } from "./DiscussionsPanel";
 import { AIWorkspaceAssistant } from "./AIWorkspaceAssistant";
-import { RefreshCw, CheckCircle2, ChevronRight, BookOpen, Video, Code2, HelpCircle } from "lucide-react";
+import { QuizAssessment } from "./QuizAssessment";
+import { RefreshCw, CheckCircle2, ChevronRight, BookOpen, Video, Code2, HelpCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface LearningWorkspaceProps {
   initialCourseId?: string;
@@ -23,53 +25,61 @@ export function LearningWorkspace({
   const [course, setCourse] = useState<any>(null);
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<"notes" | "bookmarks" | "discussions" | "ai" | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [progressPercent, setProgressPercent] = useState<number>(0);
 
   // 1. Fetch Course Data
-  useEffect(() => {
-    async function loadCourse() {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/content/courses/${initialCourseId}`);
-        const json = await res.json();
-        if (json.success && json.data) {
-          setCourse(json.data);
-          setProgressPercent(json.data.enrollmentProgress || 0);
+  const loadCourse = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/content/courses/${initialCourseId}`);
+      const json = await res.json();
 
-          // Find first lesson or initialLessonId
-          let targetLesson = null;
-          if (json.data.modules) {
-            for (const mod of json.data.modules) {
-              if (mod.lessons && mod.lessons.length > 0) {
-                if (initialLessonId) {
-                  const match = mod.lessons.find((l: any) => l.id === initialLessonId);
-                  if (match) {
-                    targetLesson = match;
-                    break;
-                  }
-                }
-                if (!targetLesson) {
-                  targetLesson = mod.lessons[0];
-                }
+      if (!res.ok || !json.success || !json.data) {
+        throw new Error(json.error || `Course "${initialCourseId}" not found or inaccessible.`);
+      }
+
+      setCourse(json.data);
+      setProgressPercent(json.data.enrollmentProgress || 0);
+
+      // Find first lesson or initialLessonId
+      let targetLesson = null;
+      if (json.data.modules && json.data.modules.length > 0) {
+        for (const mod of json.data.modules) {
+          if (mod.lessons && mod.lessons.length > 0) {
+            if (initialLessonId) {
+              const match = mod.lessons.find((l: any) => l.id === initialLessonId);
+              if (match) {
+                targetLesson = match;
+                break;
               }
             }
-          }
-
-          if (targetLesson) {
-            loadLesson(targetLesson.id);
+            if (!targetLesson) {
+              targetLesson = mod.lessons[0];
+            }
           }
         }
-      } catch (err) {
-        console.error("Error loading course:", err);
-      } finally {
-        setLoading(false);
       }
-    }
 
-    loadCourse();
+      if (targetLesson) {
+        await loadLesson(targetLesson.id);
+      } else {
+        setCurrentLesson(null);
+      }
+    } catch (err: any) {
+      console.error("Error loading course:", err);
+      setError(err.message || "Failed to load course workspace.");
+    } finally {
+      setLoading(false);
+    }
   }, [initialCourseId, initialLessonId]);
+
+  useEffect(() => {
+    loadCourse();
+  }, [loadCourse]);
 
   // 2. Fetch Detailed Lesson Data
   async function loadLesson(lessonId: string) {
@@ -134,13 +144,45 @@ export function LearningWorkspace({
     }
   }
 
-  if (loading || !course) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
         <RefreshCw className="h-8 w-8 animate-spin text-sky-500" />
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-heading">
           Loading Learning Workspace...
         </p>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 space-y-5 text-center">
+        <div className="h-16 w-16 rounded-3xl bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <div className="space-y-2 max-w-md">
+          <h1 className="text-2xl font-extrabold text-foreground font-heading">Course Workspace Unavailable</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {error || "The requested course could not be retrieved from the server."}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={loadCourse}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition-all shadow-md shadow-sky-500/20"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Retry Loading</span>
+          </button>
+          <Link
+            href="/student/dashboard"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-bold transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Dashboard</span>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -197,7 +239,7 @@ export function LearningWorkspace({
                 </button>
               </div>
 
-              {/* Video Player or Reading Stage */}
+              {/* Video Player Stage */}
               {currentLesson.lessonType === "video" && currentLesson.youtubeVideoId ? (
                 <YouTubeVideoPlayer
                   videoId={currentLesson.youtubeVideoId}
@@ -221,27 +263,31 @@ export function LearningWorkspace({
               )}
 
               {/* Assessment / Quiz Section if available */}
-              {currentLesson.assessment && (
-                <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-500/20 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5 text-sky-500" />
-                    <h3 className="text-sm font-bold text-foreground font-heading">
-                      Knowledge Check: {currentLesson.assessment.title}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {currentLesson.assessment.description || "Verify your understanding of this topic to solidify your learning."}
-                  </p>
-                  <p className="text-xs font-semibold text-sky-500">
-                    Passing score required: {currentLesson.assessment.passingScore}%
-                  </p>
+              {currentLesson.lessonType === "quiz" || currentLesson.assessment ? (
+                <div className="space-y-4 pt-2">
+                  <QuizAssessment
+                    title={currentLesson.assessment?.title || currentLesson.title}
+                    lessonId={currentLesson.id}
+                    courseId={course.id}
+                    userId={user?.id || ""}
+                    onCompleteLesson={handleCompleteLesson}
+                  />
                 </div>
-              )}
+              ) : null}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-center space-y-2">
+            <div className="flex flex-col items-center justify-center h-64 text-center space-y-3 max-w-md mx-auto">
               <BookOpen className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm font-semibold text-foreground">Select a lesson from the outline to begin.</p>
+              <h3 className="text-base font-extrabold text-foreground font-heading">No Lessons Available</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This course does not currently have published lessons. Please check back soon or explore other curriculum tracks.
+              </p>
+              <Link
+                href="/student/dashboard"
+                className="px-4 py-2 rounded-xl bg-sky-500 text-white text-xs font-bold hover:bg-sky-600 transition-colors"
+              >
+                Return to Dashboard
+              </Link>
             </div>
           )}
         </div>
@@ -274,7 +320,7 @@ export function LearningWorkspace({
                   {mod.title}
                 </p>
 
-                <div className="space-y-1 mt-1">
+                <div className="space-y-1 pt-1">
                   {(mod.lessons || []).map((l: any) => {
                     const isSelected = currentLesson?.id === l.id;
                     const isDone = completedLessonIds.has(l.id);

@@ -1,55 +1,159 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PlayCircle, BookOpen, CheckCircle2, Award, Sparkles, ChevronDown, Star, Clock } from "lucide-react";
+import { PlayCircle, BookOpen, CheckCircle2, Award, Sparkles, ChevronDown, Star, Clock, AlertCircle, RefreshCw, PlusCircle } from "lucide-react";
 
 interface RunningCourseCardProps {
   onContinueCourse: () => void;
   onViewOutline: () => void;
 }
 
+interface EnrolledCourseData {
+  courseId: string;
+  courseTitle: string;
+  courseSlug: string;
+  category: string;
+  difficulty: string;
+  thumbnailUrl?: string | null;
+  instructorName?: string | null;
+  progressPercent: number;
+  status: string;
+}
+
 export function RunningCourseCard({ onContinueCourse, onViewOutline }: RunningCourseCardProps) {
+  const [course, setCourse] = useState<EnrolledCourseData | null>(null);
+  const [nextLessonId, setNextLessonId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showGrade, setShowGrade] = useState(false);
 
-  const course = {
-    tag: "CS Fundamentals With QbitX: Spring 2026 | Semester 1",
-    title: "Introduction to Programming Language",
-    progress: 100,
-    thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800",
-    gradeStatus: "Check your Grade",
-    completedMessage: "Congratulations, completed the course !!!",
-  };
+  const fetchActiveEnrollment = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const gradeDetails = {
-    overall: "A+",
-    score: 98,
-    total: 100,
-    breakdown: [
-      { label: "Assignments", score: 49, total: 50, pct: 98 },
-      { label: "Midterm Exam", score: 24, total: 25, pct: 96 },
-      { label: "Final Project", score: 18, total: 20, pct: 90 },
-      { label: "Participation", score: 7, total: 5, pct: 100, bonus: true },
-    ],
-    instructor: "Dr. Sarah Chen",
-    issuedDate: "Jul 15, 2026",
-    credentialId: "QBITX-PY-2026-0042",
-  };
+      const dashRes = await fetch("/api/student/dashboard");
+      const dashJson = await dashRes.json();
+
+      if (!dashRes.ok || !dashJson.success) {
+        throw new Error(dashJson.error || "Failed to load student dashboard");
+      }
+
+      const activeCourse: EnrolledCourseData | null = dashJson.data?.recentCourse || null;
+      if (!activeCourse) {
+        setCourse(null);
+        return;
+      }
+
+      setCourse(activeCourse);
+
+      // Fetch course detail to determine first or next lesson ID
+      try {
+        const courseRes = await fetch(`/api/content/courses/${activeCourse.courseId}`);
+        const courseJson = await courseRes.json();
+        if (courseRes.ok && courseJson.success && courseJson.data?.modules) {
+          let foundLessonId: string | null = null;
+          for (const mod of courseJson.data.modules) {
+            if (mod.lessons && mod.lessons.length > 0) {
+              foundLessonId = mod.lessons[0].id;
+              break;
+            }
+          }
+          setNextLessonId(foundLessonId);
+        }
+      } catch {
+        // Fallback: navigation will proceed with courseId only
+        setNextLessonId(null);
+      }
+    } catch (err: any) {
+      console.error("RunningCourseCard load error:", err);
+      setError(err.message || "Failed to load active course enrollment");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveEnrollment();
+  }, [fetchActiveEnrollment]);
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-border/80 bg-card p-8 shadow-lg flex items-center justify-center space-x-3 text-muted-foreground min-h-[220px]">
+        <RefreshCw className="h-5 w-5 animate-spin text-sky-500" />
+        <span className="text-xs font-bold font-heading uppercase tracking-wider">Loading Active Course...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/30 bg-red-500/5 p-6 sm:p-8 space-y-4">
+        <div className="flex items-center gap-3 text-red-500">
+          <AlertCircle className="h-5 w-5" />
+          <h3 className="font-extrabold text-sm font-heading">Unable to load active enrollment</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">{error}</p>
+        <button
+          onClick={fetchActiveEnrollment}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Retry Connection</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Empty State: Student is not enrolled in any course yet
+  if (!course) {
+    return (
+      <div className="rounded-3xl border border-dashed border-border bg-card/60 p-8 sm:p-10 text-center space-y-4 relative overflow-hidden shadow-sm">
+        <div className="h-14 w-14 rounded-2xl bg-sky-500/10 text-sky-500 mx-auto flex items-center justify-center">
+          <BookOpen className="h-7 w-7" />
+        </div>
+        <div className="space-y-1.5 max-w-md mx-auto">
+          <h3 className="text-xl font-extrabold text-foreground font-heading">No Active Course Enrollment</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            You are not currently enrolled in an active course. Explore the curriculum catalog below to begin your hands-on software engineering journey.
+          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            onClick={onViewOutline}
+            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 text-xs font-extrabold transition-all shadow-md shadow-sky-500/20 hover:scale-[1.02]"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Browse Curriculum Catalog</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const workspaceHref = nextLessonId
+    ? `/student/workspace?courseId=${course.courseId}&lessonId=${nextLessonId}`
+    : `/student/workspace?courseId=${course.courseId}`;
+
+  const thumbnail =
+    course.thumbnailUrl ||
+    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800";
+
+  const isCompleted = course.progressPercent >= 100 || course.status === "completed";
 
   return (
     <div className="relative rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-lg hover:border-sky-500/40 transition-all overflow-hidden">
-      
       {/* Decorative Subtle Background Glow */}
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
 
       <div className="flex flex-col md:flex-row items-stretch gap-8 relative z-10">
-        
         {/* Left: Thumbnail Image */}
         <div className="relative w-full md:w-80 h-52 rounded-2xl overflow-hidden bg-muted shrink-0 shadow-md">
           <Image
-            src={course.thumbnail}
-            alt={course.title}
+            src={thumbnail}
+            alt={course.courseTitle}
             fill
             className="object-cover"
             priority
@@ -57,20 +161,26 @@ export function RunningCourseCard({ onContinueCourse, onViewOutline }: RunningCo
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <div className="absolute bottom-3 left-3 text-white flex items-center gap-1.5">
             <span className="text-[11px] font-extrabold uppercase bg-sky-500 px-3 py-1 rounded-lg shadow-sm flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> Running Course
+              <Sparkles className="h-3 w-3" /> {isCompleted ? "Completed Course" : "Running Course"}
             </span>
           </div>
         </div>
 
         {/* Right: Course Details & Progress */}
         <div className="flex-1 flex flex-col justify-between space-y-4 w-full">
-          
           <div className="space-y-2">
-            <span className="inline-block text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20">
-              {course.tag}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-block text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20 font-heading">
+                {course.category} • {course.difficulty}
+              </span>
+              {course.instructorName && (
+                <span className="text-xs text-muted-foreground font-medium">
+                  Instructor: <strong className="text-foreground">{course.instructorName}</strong>
+                </span>
+              )}
+            </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground font-heading tracking-tight leading-snug">
-              {course.title}
+              {course.courseTitle}
             </h2>
           </div>
 
@@ -78,37 +188,43 @@ export function RunningCourseCard({ onContinueCourse, onViewOutline }: RunningCo
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-muted-foreground">Overall Completion Progress</span>
-              <span className="text-emerald-500 font-extrabold text-sm">{course.progress}%</span>
+              <span className="text-emerald-500 font-extrabold text-sm">{course.progressPercent}%</span>
             </div>
             <div className="w-full h-3.5 rounded-full bg-muted overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 rounded-full transition-all duration-500"
-                style={{ width: `${course.progress}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, course.progressPercent))}%` }}
               />
             </div>
           </div>
 
-          {/* Completion Status & Grade toggle */}
+          {/* Completion Status */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <p className="text-xs sm:text-sm font-extrabold text-emerald-500 flex items-center gap-2">
               <CheckCircle2 className="h-4.5 w-4.5" />
-              <span>{course.completedMessage}</span>
+              <span>
+                {isCompleted
+                  ? "Congratulations! You have completed all lessons in this course."
+                  : `${course.progressPercent}% Completed — Keep up the momentum!`}
+              </span>
             </p>
 
-            <button
-              onClick={() => setShowGrade((v) => !v)}
-              className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 flex items-center gap-1.5 bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20 transition-colors"
-            >
-              <Award className="h-4 w-4" />
-              <span>{course.gradeStatus}</span>
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showGrade ? "rotate-180" : ""}`} />
-            </button>
+            {isCompleted && (
+              <button
+                onClick={() => setShowGrade((v) => !v)}
+                className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 flex items-center gap-1.5 bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20 transition-colors"
+              >
+                <Award className="h-4 w-4" />
+                <span>Certificate Status</span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showGrade ? "rotate-180" : ""}`} />
+              </button>
+            )}
           </div>
 
           {/* Primary Action Buttons */}
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <Link
-              href="/student/workspace?courseId=crs-1&lessonId=les-1"
+              href={workspaceHref}
               className="inline-flex items-center gap-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 text-xs font-extrabold transition-all shadow-md shadow-sky-500/20 hover:scale-[1.02]"
             >
               <PlayCircle className="h-4.5 w-4.5" />
@@ -126,49 +242,23 @@ export function RunningCourseCard({ onContinueCourse, onViewOutline }: RunningCo
         </div>
       </div>
 
-      {/* ── Grade Details Panel (expands inside card, no alert) ── */}
-      {showGrade && (
+      {/* Completion info panel */}
+      {showGrade && isCompleted && (
         <div className="mt-6 pt-6 border-t border-border/60 animate-in fade-in slide-in-from-top-2 duration-200 relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-            
-            {/* Overall grade badge */}
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 min-w-[80px]">
-                <Star className="h-5 w-5 text-emerald-500 mb-1" />
-                <span className="text-3xl font-black text-emerald-500">{gradeDetails.overall}</span>
-                <span className="text-[10px] font-bold text-muted-foreground mt-0.5">{gradeDetails.score}/{gradeDetails.total}</span>
-              </div>
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <Award className="h-6 w-6 text-emerald-500" />
               <div>
-                <p className="text-xs font-semibold text-muted-foreground">Graded by</p>
-                <p className="text-sm font-bold text-foreground">{gradeDetails.instructor}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> Issued: {gradeDetails.issuedDate}
-                </p>
-                <p className="text-[10px] font-mono text-sky-500 mt-0.5">ID: {gradeDetails.credentialId}</p>
+                <p className="text-xs font-extrabold text-foreground font-heading">Course Requirement Fulfilled (100%)</p>
+                <p className="text-[11px] text-muted-foreground">Your verified certificate of completion is ready in the Certificates tab.</p>
               </div>
             </div>
-
-            {/* Score breakdown bars */}
-            <div className="flex-1 space-y-2.5 min-w-0">
-              <p className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wide">Score Breakdown</p>
-              {gradeDetails.breakdown.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-[11px] font-semibold text-muted-foreground w-28 shrink-0 truncate">
-                    {item.label}
-                    {item.bonus && <span className="text-emerald-500 ml-1">(+bonus)</span>}
-                  </span>
-                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-                      style={{ width: `${Math.min(100, item.pct)}%` }}
-                    />
-                  </div>
-                  <span className="text-[11px] font-extrabold text-foreground w-12 text-right shrink-0">
-                    {item.score}/{item.total}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={onContinueCourse}
+              className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline"
+            >
+              View Certificate Tab →
+            </button>
           </div>
         </div>
       )}

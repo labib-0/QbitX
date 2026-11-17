@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { CheckCircle2 } from "lucide-react"
@@ -100,6 +101,7 @@ export function LearningTracksSection() {
               <Button 
                 variant={track.popular ? 'default' : 'outline'} 
                 className={`w-full rounded-full ${track.popular ? 'shadow-lg hover:shadow-primary/25' : ''}`}
+                render={<Link href="/register/student" />}
               >
                 Explore Track
               </Button>

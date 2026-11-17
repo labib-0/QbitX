@@ -10,9 +10,6 @@ import {
   User,
   Plus,
   Trash2,
-  Edit2,
-  Pin,
-  Search,
   Copy,
   ThumbsUp,
   ThumbsDown,
@@ -22,6 +19,8 @@ import {
   Terminal,
   MessageSquare,
   CheckCircle2,
+  Loader2,
+  Search,
 } from "lucide-react";
 
 interface AIAssistantWidgetProps {
@@ -29,48 +28,14 @@ interface AIAssistantWidgetProps {
   onCloseFloating?: () => void;
 }
 
-const CHAT_THREADS_STORAGE_KEY = "qbitx_ai_chat_threads";
-
 export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAssistantWidgetProps) {
   const { user } = useAuth();
   const userName = user?.name || "Student";
   const courseTitle = "Introduction to Programming Language";
 
   // Multi-conversation state
-  const [threads, setThreads] = useState<ConversationThread[]>([
-    {
-      id: "thread-1",
-      title: "Binary Search & Algorithms",
-      isPinned: true,
-      createdAt: "2026-07-30T10:00:00Z",
-      updatedAt: "2026-07-30T10:00:00Z",
-      messages: [
-        {
-          id: "m-1",
-          sender: "ai",
-          text: `Hello ${userName}! 👋 I'm your 24/7 QbitX AI Mentor. I see you are currently enrolled in **${courseTitle}**. Ask me anything about Python syntax, data structures, code debugging, or capstone projects!`,
-          timestamp: "Just now",
-        },
-      ],
-    },
-    {
-      id: "thread-2",
-      title: "React Hooks & Next.js 16",
-      isPinned: false,
-      createdAt: "2026-07-29T14:00:00Z",
-      updatedAt: "2026-07-29T14:00:00Z",
-      messages: [
-        {
-          id: "m-2",
-          sender: "ai",
-          text: "React Hooks allow functional components to manage local state and side effects.",
-          timestamp: "Yesterday",
-        },
-      ],
-    },
-  ]);
-
-  const [activeThreadId, setActiveThreadId] = useState<string>("thread-1");
+  const [threads, setThreads] = useState<ConversationThread[]>([]);
+  const [activeThreadId, setActiveThreadId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
   const [inputPrompt, setInputPrompt] = useState("");
@@ -81,28 +46,106 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(CHAT_THREADS_STORAGE_KEY);
-        if (stored) setThreads(JSON.parse(stored));
-      } catch (e) { }
+  const loadMessagesForThread = useCallback(async (convId: string) => {
+    if (!convId || convId.startsWith("new-")) return;
+    try {
+      const res = await fetch(`/api/ai/chat?conversationId=${encodeURIComponent(convId)}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const msgs: AIMessage[] = json.data.map((m: any) => ({
+          id: m.id,
+          sender: m.role === "user" ? "user" : "ai",
+          text: m.content,
+          timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        }));
+        setThreads((prev) =>
+          prev.map((t) => (t.id === convId ? { ...t, messages: msgs } : t))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load conversation messages:", err);
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && threads.length > 0) {
-      try {
-        localStorage.setItem(CHAT_THREADS_STORAGE_KEY, JSON.stringify(threads));
-      } catch (e) { }
+  // Fetch all user conversations from server
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/ai/chat");
+      if (!res.ok) throw new Error("Failed to load conversations");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const serverThreads: ConversationThread[] = json.data.map((c: any) => ({
+          id: c.id,
+          title: c.title || "AI Mentorship",
+          isPinned: false,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+          messages: [],
+        }));
+        setThreads(serverThreads);
+        setActiveThreadId(serverThreads[0].id);
+        loadMessagesForThread(serverThreads[0].id);
+      } else {
+        const welcomeThread: ConversationThread = {
+          id: `new-${Date.now()}`,
+          title: "Introduction to Programming",
+          isPinned: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          messages: [
+            {
+              id: "m-welcome",
+              sender: "ai",
+              text: `Hello ${userName}! 👋 I'm your 24/7 QbitX AI Mentor. Ask me anything about programming syntax, algorithms, debugging, or project architecture!`,
+              timestamp: "Just now",
+            },
+          ],
+        };
+        setThreads([welcomeThread]);
+        setActiveThreadId(welcomeThread.id);
+      }
+    } catch (e) {
+      console.error("Failed to fetch conversations:", e);
+      const fallbackThread: ConversationThread = {
+        id: `new-${Date.now()}`,
+        title: "Introduction to Programming",
+        isPinned: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        messages: [
+          {
+            id: "m-welcome",
+            sender: "ai",
+            text: `Hello ${userName}! 👋 I'm your 24/7 QbitX AI Mentor. Ask me anything about programming syntax, algorithms, debugging, or project architecture!`,
+            timestamp: "Just now",
+          },
+        ],
+      };
+      setThreads([fallbackThread]);
+      setActiveThreadId(fallbackThread.id);
     }
-  }, [threads]);
+  }, [userName, loadMessagesForThread]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threads, streamingText, thinkingStage]);
 
-  const activeThread = threads.find((t) => t.id === activeThreadId) || threads[0];
+  const activeThread =
+    threads.find((t) => t.id === activeThreadId) ||
+    threads[0] || {
+      id: "fallback",
+      title: "New Discussion",
+      isPinned: false,
+      createdAt: "",
+      updatedAt: "",
+      messages: [],
+    };
+
   const prompts = AIService.getSuggestedPrompts();
 
   // Handle sending message
@@ -116,6 +159,9 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
       text: query,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
+
+    const isRealConversation = !activeThread.id.startsWith("new-") && activeThread.id !== "fallback";
+    const conversationIdToSend = isRealConversation ? activeThread.id : undefined;
 
     // Add user message to active thread
     setThreads((prev) =>
@@ -135,17 +181,36 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
         query,
         { userName, courseTitle },
         (stage) => setThinkingStage(stage),
-        (chunk) => setStreamingText(chunk)
+        (chunk) => setStreamingText(chunk),
+        conversationIdToSend
       );
+
+      const resultingConvId = aiReply.conversationId || activeThread.id;
 
       // Add finalized AI message to active thread
       setThreads((prev) =>
-        prev.map((t) =>
-          t.id === activeThread.id
-            ? { ...t, messages: [...t.messages, aiReply], updatedAt: new Date().toISOString() }
-            : t
-        )
+        prev.map((t) => {
+          if (t.id === activeThread.id) {
+            return {
+              ...t,
+              id: resultingConvId,
+              title:
+                t.id.startsWith("new-") || t.id === "fallback"
+                  ? query.length > 30
+                    ? query.substring(0, 30) + "..."
+                    : query
+                  : t.title,
+              messages: [...t.messages, aiReply],
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return t;
+        })
       );
+
+      if (!isRealConversation && aiReply.conversationId) {
+        setActiveThreadId(aiReply.conversationId);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -158,8 +223,8 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
   // Conversation thread operations
   const handleNewChat = () => {
     const newThread: ConversationThread = {
-      id: `thread-${Date.now()}`,
-      title: `New Discussion ${threads.length + 1}`,
+      id: `new-${Date.now()}`,
+      title: `Discussion ${threads.length + 1}`,
       isPinned: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -174,14 +239,40 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
     };
     setThreads([newThread, ...threads]);
     setActiveThreadId(newThread.id);
+    setShowSidebar(false);
   };
 
-  const handleDeleteThread = (id: string, e: React.MouseEvent) => {
+  const handleDeleteThread = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (threads.length <= 1) return;
+
+    if (!id.startsWith("new-") && id !== "fallback") {
+      try {
+        await fetch(`/api/ai/chat?conversationId=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Failed to delete thread on server:", err);
+      }
+    }
+
     const filtered = threads.filter((t) => t.id !== id);
     setThreads(filtered);
-    if (activeThreadId === id) setActiveThreadId(filtered[0].id);
+    if (activeThreadId === id) {
+      setActiveThreadId(filtered[0].id);
+      if (filtered[0].messages.length === 0) {
+        loadMessagesForThread(filtered[0].id);
+      }
+    }
+  };
+
+  const handleSelectThread = (id: string) => {
+    setActiveThreadId(id);
+    setShowSidebar(false);
+    const target = threads.find((t) => t.id === id);
+    if (target && target.messages.length === 0) {
+      loadMessagesForThread(id);
+    }
   };
 
   const handleCopyMessage = (text: string, id: string) => {
@@ -195,11 +286,11 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
       prev.map((t) =>
         t.id === activeThread.id
           ? {
-            ...t,
-            messages: t.messages.map((m) =>
-              m.id === msgId ? { ...m, feedback: m.feedback === feedbackType ? undefined : feedbackType } : m
-            ),
-          }
+              ...t,
+              messages: t.messages.map((m) =>
+                m.id === msgId ? { ...m, feedback: m.feedback === feedbackType ? undefined : feedbackType } : m
+              ),
+            }
           : t
       )
     );
@@ -215,7 +306,6 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
   return (
     <div className={containerClasses}>
-
       {/* AI Header Bar */}
       <div className="p-4 border-b border-border/50 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-purple-500/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -262,7 +352,6 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
       {/* Main Body: Conversations Sidebar + Chat Canvas */}
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
-
         {/* Conversations Sidebar Drawer */}
         {showSidebar && (
           <aside className="w-64 border-r border-border bg-card p-3 space-y-3 flex flex-col justify-between absolute inset-y-0 left-0 z-30 shadow-2xl animate-in slide-in-from-left duration-200">
@@ -293,14 +382,12 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                   return (
                     <div
                       key={t.id}
-                      onClick={() => {
-                        setActiveThreadId(t.id);
-                        setShowSidebar(false);
-                      }}
-                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between group ${isActive
-                        ? "bg-sky-500 text-white border-sky-500 font-bold shadow-sm"
-                        : "border-border/50 text-foreground hover:bg-muted/60"
-                        }`}
+                      onClick={() => handleSelectThread(t.id)}
+                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between group ${
+                        isActive
+                          ? "bg-sky-500 text-white border-sky-500 font-bold shadow-sm"
+                          : "border-border/50 text-foreground hover:bg-muted/60"
+                      }`}
                     >
                       <span className="truncate pr-2">{t.title}</span>
                       {threads.length > 1 && (
@@ -321,7 +408,6 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
         {/* Chat Canvas */}
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
-
           {/* Suggested Prompts Bar */}
           <div className="px-4 py-2 bg-muted/30 border-b border-border/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
             <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">Suggested:</span>
@@ -344,17 +430,19 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                 className={`flex items-start gap-3 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
               >
                 <div
-                  className={`h-8 w-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${msg.sender === "user" ? "bg-sky-500 text-white" : "bg-purple-600 text-white"
-                    }`}
+                  className={`h-8 w-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${
+                    msg.sender === "user" ? "bg-sky-500 text-white" : "bg-purple-600 text-white"
+                  }`}
                 >
                   {msg.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
 
                 <div
-                  className={`max-w-[85%] rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${msg.sender === "user"
-                    ? "bg-sky-500 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
-                    : "bg-card text-foreground rounded-tl-none border border-border shadow-sm"
-                    }`}
+                  className={`max-w-[85%] rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
+                    msg.sender === "user"
+                      ? "bg-sky-500 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
+                      : "bg-card text-foreground rounded-tl-none border border-border shadow-sm"
+                  }`}
                 >
                   <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
 
@@ -424,7 +512,10 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                   <Bot className="h-4 w-4" />
                 </div>
                 <div className="max-w-[85%] rounded-2xl rounded-tl-none p-4 bg-card text-foreground border border-sky-500/40 text-xs leading-relaxed shadow-sm">
-                  <p className="whitespace-pre-line leading-relaxed">{streamingText}<span className="inline-block w-1.5 h-3 bg-sky-500 ml-1 animate-pulse" /></p>
+                  <p className="whitespace-pre-line leading-relaxed">
+                    {streamingText}
+                    <span className="inline-block w-1.5 h-3 bg-sky-500 ml-1 animate-pulse" />
+                  </p>
                 </div>
               </div>
             )}
@@ -453,15 +544,14 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                 disabled={!inputPrompt.trim() || loading}
                 className="rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 p-3 text-white disabled:opacity-50 hover:scale-105 transition-transform shadow-md shadow-sky-500/20"
               >
-                <Send className="h-4 w-4" />
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </form>
 
             <p className="text-[10px] text-center text-muted-foreground">
-              Powered by QbitX AI Provider Abstraction Layer (Demo Mode — Zero API Key Required).
+              Powered by QbitX AI Provider (Gemini / Pedagogical Fallback).
             </p>
           </div>
-
         </div>
       </div>
     </div>

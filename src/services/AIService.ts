@@ -55,6 +55,7 @@ export class AIService {
 
       return {
         id: `ai-${Date.now()}`,
+        conversationId: data.conversationId,
         sender: "ai",
         text: content,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),

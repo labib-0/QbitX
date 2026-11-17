@@ -411,6 +411,59 @@ export const notifications = pgTable("notifications", {
 });
 
 // ==========================================
+// 9.5 WORKSPACE TABLES (Notes, Bookmarks, Discussions)
+// ==========================================
+
+export const workspaceNotes = pgTable("workspace_notes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  timestampSeconds: integer("timestamp_seconds"),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  isPinned: boolean("is_pinned").notNull().default(false),
+  isShared: boolean("is_shared").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const workspaceBookmarks = pgTable("workspace_bookmarks", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  timestampSeconds: integer("timestamp_seconds"),
+  note: text("note"),
+  codeSnippet: text("code_snippet"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const workspaceDiscussions = pgTable("workspace_discussions", {
+  id: text("id").primaryKey(),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  upvotes: integer("upvotes").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const workspaceDiscussionReplies = pgTable("workspace_discussion_replies", {
+  id: text("id").primaryKey(),
+  discussionId: text("discussion_id").notNull().references(() => workspaceDiscussions.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  content: text("content").notNull(),
+  upvotes: integer("upvotes").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ==========================================
 // 10. RELATIONS DEFINITIONS
 // ==========================================
 

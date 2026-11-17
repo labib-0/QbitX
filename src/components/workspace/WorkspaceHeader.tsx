@@ -45,15 +45,15 @@ export function WorkspaceHeader({
             />
           </Link>
 
-          <div className="h-4 w-px bg-border/60 hidden md:block shrink-0" />
+          <div className="h-4 w-px bg-border/60 shrink-0" />
 
           {/* Breadcrumb */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-muted-foreground truncate">
-            <span className="hover:text-foreground transition-colors truncate max-w-[140px]">{courseTitle}</span>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground truncate">
+            <span className="hidden md:inline hover:text-foreground transition-colors truncate max-w-[140px]">{courseTitle}</span>
+            <ChevronRight className="hidden md:inline h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="hover:text-foreground transition-colors truncate max-w-[130px] sm:max-w-[180px]">{moduleTitle}</span>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="hover:text-foreground transition-colors truncate max-w-[120px]">{moduleTitle}</span>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="text-foreground font-bold truncate max-w-[160px]">{lessonTitle}</span>
+            <span className="text-foreground font-bold truncate max-w-[120px] sm:max-w-[160px]">{lessonTitle}</span>
           </div>
         </div>
 

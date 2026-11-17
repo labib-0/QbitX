@@ -167,6 +167,12 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPro
               {profile.graduationYear && <span>• Class of {profile.graduationYear}</span>}
             </p>
 
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+              <span className="text-[11px] font-extrabold bg-sky-500/15 text-sky-600 dark:text-sky-400 px-3 py-1 rounded-xl border border-sky-500/20">
+                Full-Stack Web & AI Engineering
+              </span>
+            </div>
+
             <p className="text-xs text-muted-foreground leading-relaxed pt-1">
               {profile.bio}
             </p>

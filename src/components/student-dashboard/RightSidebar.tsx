@@ -1,66 +1,117 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Flame, 
   Clock, 
   CheckCircle2, 
-  Megaphone
+  Megaphone,
+  BookOpen,
+  RefreshCw,
+  GitBranch
 } from "lucide-react";
-import { MOCK_STATS, MOCK_ASSIGNMENTS } from "@/lib/dashboardData";
+import Link from "next/link";
+
+interface DashboardData {
+  stats: {
+    enrolledCoursesCount: number;
+    completedCoursesCount: number;
+    completedLessonsCount: number;
+    averageProgressPercent: number;
+    activeProjectsCount: number;
+    level: number;
+    xp: number;
+  };
+  activeCourses: Array<{
+    courseId: string;
+    courseTitle: string;
+    progressPercent: number;
+  }>;
+  activeProjects: Array<{
+    projectId: string;
+    projectTitle: string;
+    status: string;
+  }>;
+  unreadNotifications: Array<{
+    id: string;
+    title: string;
+    message: string;
+    createdAt: string;
+  }>;
+}
 
 export function RightSidebar() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Local task checklist with localStorage persistence
   const [tasks, setTasks] = useState([
-    { id: 1, text: "Watch Full-Stack AI Web Lecture #4", done: true, tag: "Video" },
-    { id: 2, text: "Complete Graph Traversal Quiz #2", done: true, tag: "Quiz" },
-    { id: 3, text: "Submit DSA Lab #4 Source Code", done: false, tag: "Assignment" },
-    { id: 4, text: "Push GitHub Commit for RAG Pipeline", done: false, tag: "GitHub" },
-    { id: 5, text: "Attend PASS Mentor Meeting at 4 PM", done: false, tag: "Meeting" },
+    { id: 1, text: "Review next course lesson video", done: false, tag: "Curriculum" },
+    { id: 2, text: "Commit code progress to GitHub", done: false, tag: "GitHub" },
+    { id: 3, text: "Test knowledge check quiz assessment", done: false, tag: "Quiz" },
   ]);
 
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem("qbitx_student_checklist");
+      if (savedTasks) {
+        setTasks(JSON.parse(savedTasks));
+      }
+    } catch {}
+
+    async function fetchDashboardSummary() {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/student/dashboard");
+        const json = await res.json();
+        if (res.ok && json.success && json.data) {
+          setData(json.data);
+        }
+      } catch (err) {
+        console.error("RightSidebar fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardSummary();
+  }, []);
+
   const toggleTask = (id: number) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    const updated = tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+    setTasks(updated);
+    try {
+      localStorage.setItem("qbitx_student_checklist", JSON.stringify(updated));
+    } catch {}
   };
 
-  const streak = MOCK_STATS.currentStreak;
-  const completedCount = tasks.filter(t => t.done).length;
+  const completedCount = tasks.filter((t) => t.done).length;
 
   return (
     <aside className="hidden xl:block w-80 border-l border-border/40 bg-card/40 backdrop-blur-md p-4 space-y-6 shrink-0 h-[calc(100vh-4rem)] sticky top-16 z-20 overflow-y-auto custom-scrollbar">
-      
-      {/* 1. Learning Streak Card */}
-      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-4 space-y-3">
+      {/* 1. Academic Level & XP Card */}
+      <div className="rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 via-indigo-500/5 to-transparent p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-amber-500 font-bold text-sm">
+          <div className="flex items-center gap-2 text-sky-500 font-bold text-sm font-heading">
             <Flame className="h-5 w-5 animate-pulse" />
-            <span>Learning Streak</span>
+            <span>Academic Level</span>
           </div>
-            <span className="text-xs font-mono font-extrabold text-amber-500 bg-amber-500/20 px-2.5 py-0.5 rounded-full">
-            {streak} Days
-            </span>
+          <span className="text-xs font-mono font-extrabold text-sky-500 bg-sky-500/20 px-2.5 py-0.5 rounded-full font-heading">
+            Level {data?.stats?.level || 1}
+          </span>
         </div>
         <p className="text-xs text-muted-foreground leading-snug">
-          You are <strong>1 day away</strong> from earning the {streak + 1}-Day Master Streaker badge &amp; +300 bonus XP!
+          Total Earned XP: <strong className="text-foreground">{data?.stats?.xp || 0} XP</strong> across{" "}
+          <strong className="text-foreground">{data?.stats?.completedLessonsCount || 0}</strong> completed lessons.
         </p>
-        <div className="grid grid-cols-7 gap-1 pt-1">
-          {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => (
-            <div key={idx} className="text-center">
-              <div className={`h-7 w-7 rounded-lg flex items-center justify-center text-[10px] font-bold mx-auto ${
-                idx < 5 ? "bg-amber-500 text-slate-950 font-black shadow-sm" : "bg-muted text-muted-foreground"
-              }`}>
-                {idx < 5 ? "✓" : day}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* 2. Today's Tasks Checklist */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+          <h3 className="font-bold text-sm text-foreground flex items-center gap-2 font-heading">
             <CheckCircle2 className="h-4 w-4 text-sky-500" />
-            <span>Today&apos;s Tasks</span>
+            <span>Today&apos;s Focus Checklist</span>
           </h3>
           <span className="text-xs font-semibold text-muted-foreground">
             {completedCount}/{tasks.length} Done
@@ -103,46 +154,63 @@ export function RightSidebar() {
         </div>
       </div>
 
-      {/* 3. Upcoming Deadlines */}
+      {/* 3. Active Enrolled Courses */}
       <div className="space-y-3">
-        <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
-          <Clock className="h-4 w-4 text-purple-500" />
-          <span>Upcoming Deadlines</span>
+        <h3 className="font-bold text-sm text-foreground flex items-center gap-2 font-heading">
+          <BookOpen className="h-4 w-4 text-purple-500" />
+          <span>Curriculum Progress</span>
         </h3>
 
-        <div className="space-y-2">
-          {MOCK_ASSIGNMENTS.filter(a => a.status === "pending").map((d, idx) => (
-            <div key={idx} className="p-3 rounded-xl bg-card border border-border space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-foreground truncate max-w-[170px]">{d.title}</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                  d.priority === "high" ? "bg-red-500/15 text-red-500" : "bg-purple-500/15 text-purple-500"
-                }`}>
-                  {d.priority === "high" ? "Urgent" : "Soon"}
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground flex items-center justify-between">
-                <span>{d.course}</span>
-                <span className="font-mono text-[10px] text-slate-400">
-                  {new Date(d.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
-              </p>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="p-4 text-center text-xs text-muted-foreground">
+            <RefreshCw className="h-4 w-4 animate-spin mx-auto mb-1 text-sky-500" />
+            <span>Syncing progress...</span>
+          </div>
+        ) : !data?.activeCourses || data.activeCourses.length === 0 ? (
+          <div className="p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground text-center">
+            No active courses enrolled yet.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {data.activeCourses.slice(0, 3).map((c) => (
+              <Link
+                key={c.courseId}
+                href={`/student/workspace?courseId=${c.courseId}`}
+                className="block p-3 rounded-xl bg-card border border-border space-y-1.5 hover:border-sky-500/40 transition-colors"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-foreground truncate max-w-[170px] font-heading">{c.courseTitle}</span>
+                  <span className="text-[10px] font-bold text-sky-500">{c.progressPercent}%</span>
+                </div>
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-sky-500"
+                    style={{ width: `${c.progressPercent}%` }}
+                  />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 4. Platform Announcements */}
+      {/* 4. Platform Announcements & Notifications */}
       <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-3.5 space-y-2 text-xs">
-        <div className="flex items-center gap-2 font-bold text-sky-600 dark:text-sky-400">
+        <div className="flex items-center gap-2 font-bold text-sky-600 dark:text-sky-400 font-heading">
           <Megaphone className="h-4 w-4" />
-          <span>QbitX Announcement</span>
+          <span>Platform Announcements</span>
         </div>
-        <p className="text-muted-foreground leading-relaxed">
-          Annual Hackathon 2026 registration is live! Team up with your Learning Family to compete for $5,000 in prizes.
-        </p>
+        {data?.unreadNotifications && data.unreadNotifications.length > 0 ? (
+          <div className="space-y-1">
+            <p className="font-bold text-foreground">{data.unreadNotifications[0].title}</p>
+            <p className="text-muted-foreground leading-relaxed">{data.unreadNotifications[0].message}</p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground leading-relaxed">
+            Welcome to QbitX! Build industry-grade software engineering projects with real-time AI mentoring.
+          </p>
+        )}
       </div>
-
     </aside>
   );
 }

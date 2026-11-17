@@ -13,6 +13,7 @@ export interface AIContext {
 
 export interface AIMessagePayload {
   id: string;
+  conversationId?: string;
   sender: "user" | "ai";
   text: string;
   timestamp: string;

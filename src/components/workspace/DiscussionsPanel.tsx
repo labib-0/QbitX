@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MessageSquare, ThumbsUp, Send, CheckCircle2, ShieldCheck, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { MessageSquare, ThumbsUp, CheckCircle2, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { DiscussionThread } from "@/types/workspace";
-import { WorkspaceService } from "@/services/workspace/WorkspaceService";
 
 interface DiscussionsPanelProps {
   userId: string;
@@ -15,48 +14,112 @@ interface DiscussionsPanelProps {
 
 export function DiscussionsPanel({ userId, userName, lessonId, onClose }: DiscussionsPanelProps) {
   const [threads, setThreads] = useState<DiscussionThread[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [newQuestionTitle, setNewQuestionTitle] = useState("");
   const [newQuestionBody, setNewQuestionBody] = useState("");
   const [activeReplyThreadId, setActiveReplyThreadId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  useEffect(() => {
-    setThreads(WorkspaceService.getDiscussions(lessonId));
+  const fetchThreads = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/workspace/discussions?lessonId=${encodeURIComponent(lessonId)}`);
+      if (!res.ok) throw new Error("Failed to load discussions");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setThreads(json.data);
+      }
+    } catch {
+      setError("Unable to load discussions.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [lessonId]);
 
-  const handlePostThread = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchThreads();
+  }, [fetchThreads]);
+
+  const handlePostThread = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestionTitle.trim() || !newQuestionBody.trim()) return;
+    if (!newQuestionTitle.trim() || !newQuestionBody.trim() || isPosting) return;
 
-    const created = WorkspaceService.addDiscussion({
-      lessonId,
-      authorId: userId,
-      authorName: userName,
-      authorRole: "student",
-      title: newQuestionTitle,
-      content: newQuestionBody,
-      isPinned: false,
-      isResolved: false,
-      tags: ["q-and-a"],
-    });
+    setIsPosting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/workspace/discussions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessonId,
+          title: newQuestionTitle.trim(),
+          content: newQuestionBody.trim(),
+        }),
+      });
 
-    setThreads([created, ...threads]);
-    setNewQuestionTitle("");
-    setNewQuestionBody("");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to post question");
+      }
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        setThreads((prev) => [json.data, ...prev]);
+        setNewQuestionTitle("");
+        setNewQuestionBody("");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to post question");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
-  const handlePostComment = (threadId: string) => {
-    if (!replyText.trim()) return;
-    const added = WorkspaceService.addComment(threadId, lessonId, {
-      authorId: userId,
-      authorName: userName,
-      authorRole: "student",
-      content: replyText,
-    });
-    if (added) {
-      setThreads(WorkspaceService.getDiscussions(lessonId));
-      setReplyText("");
-      setActiveReplyThreadId(null);
+  const handlePostComment = async (threadId: string) => {
+    if (!replyText.trim() || isPosting) return;
+
+    setIsPosting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/workspace/discussions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          threadId,
+          lessonId,
+          content: replyText.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to post reply");
+      }
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        setThreads((prev) =>
+          prev.map((t) => {
+            if (t.id === threadId) {
+              return {
+                ...t,
+                comments: [...t.comments, json.data],
+              };
+            }
+            return t;
+          })
+        );
+        setReplyText("");
+        setActiveReplyThreadId(null);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to post reply");
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -74,6 +137,12 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
           </button>
         </div>
 
+        {error && (
+          <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+            {error}
+          </div>
+        )}
+
         {/* Post New Question Form */}
         <form onSubmit={handlePostThread} className="p-3.5 rounded-2xl bg-muted/40 border border-border space-y-2 shrink-0">
           <input
@@ -82,6 +151,7 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
             onChange={(e) => setNewQuestionTitle(e.target.value)}
             placeholder="Ask a question about this lesson..."
             required
+            disabled={isPosting}
             className="w-full rounded-xl bg-background border border-border px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
           />
           <textarea
@@ -90,10 +160,16 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
             onChange={(e) => setNewQuestionBody(e.target.value)}
             placeholder="Describe your issue or code snippet..."
             required
+            disabled={isPosting}
             className="w-full rounded-xl bg-background border border-border p-3 text-xs text-foreground focus:outline-none resize-none"
           />
           <div className="flex justify-end">
-            <button type="submit" className="px-4 py-1.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white hover:bg-sky-600 shadow-md shadow-sky-500/20">
+            <button
+              type="submit"
+              disabled={isPosting}
+              className="px-4 py-1.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white hover:bg-sky-600 shadow-md shadow-sky-500/20 flex items-center gap-1.5"
+            >
+              {isPosting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
               Post Question
             </button>
           </div>
@@ -101,7 +177,12 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
 
         {/* Threads List */}
         <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
-          {threads.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+              <p className="text-xs">Loading discussions...</p>
+            </div>
+          ) : threads.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">No discussions yet. Be the first to ask!</p>
           ) : (
             threads.map((thread) => (
@@ -131,7 +212,7 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
                 </div>
 
                 {/* Comments / Mentor Answers */}
-                {thread.comments.length > 0 && (
+                {thread.comments && thread.comments.length > 0 && (
                   <div className="pl-3 border-l-2 border-sky-500/40 space-y-2 pt-1">
                     {thread.comments.map((comm) => (
                       <div key={comm.id} className="p-2.5 rounded-xl bg-muted/40 border border-border/50 space-y-1 text-xs">
@@ -162,11 +243,27 @@ export function DiscussionsPanel({ userId, userName, lessonId, onClose }: Discus
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       placeholder="Write a reply..."
+                      disabled={isPosting}
                       className="w-full rounded-xl bg-muted/40 border border-border p-2 text-xs text-foreground focus:outline-none resize-none"
                     />
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setActiveReplyThreadId(null)} className="px-3 py-1 rounded-lg text-xs bg-muted">Cancel</button>
-                      <button onClick={() => handlePostComment(thread.id)} className="px-3 py-1 rounded-lg text-xs font-bold bg-sky-500 text-white">Reply</button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveReplyThreadId(null)}
+                        disabled={isPosting}
+                        className="px-3 py-1 rounded-lg text-xs bg-muted"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePostComment(thread.id)}
+                        disabled={isPosting}
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-sky-500 text-white flex items-center gap-1"
+                      >
+                        {isPosting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                        Reply
+                      </button>
                     </div>
                   </div>
                 ) : (

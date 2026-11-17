@@ -1,10 +1,23 @@
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText, streamText } from "ai";
 import { db, schema } from "@/server/db";
 import { eq, desc } from "drizzle-orm";
 
 export function isAIConfigured(): boolean {
   return !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
+}
+
+let googleProvider: ReturnType<typeof createGoogleGenerativeAI> | null = null;
+
+/** Build the provider with whichever Gemini key name is configured. */
+function getGoogleProvider() {
+  if (!googleProvider) {
+    googleProvider = createGoogleGenerativeAI({
+      apiKey:
+        process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || "",
+    });
+  }
+  return googleProvider;
 }
 
 /**
@@ -80,6 +93,14 @@ function isModelUnavailableError(error: any): boolean {
   return /model/i.test(message) && /not found|not supported|unsupported|404|ListModels/i.test(message);
 }
 
+/** HTTP status from the provider, without exposing the provider's message. */
+function getProviderStatus(error: any): number | undefined {
+  const direct = Number(error?.statusCode ?? error?.status ?? error?.cause?.status);
+  if (Number.isInteger(direct) && direct >= 400 && direct < 600) return direct;
+  const match = String(error?.message || "").match(/\b(4\d{2}|5\d{2})\b/);
+  return match ? Number(match[1]) : undefined;
+}
+
 export const QBITX_SYSTEM_PROMPT = `You are the QbitX AI Engineering Mentor, an intelligent software engineering tutor and pedagogical assistant for university computer science and software engineering students.
 
 Your role:
@@ -102,7 +123,7 @@ export async function generateAIResponse({
   conversationHistory?: { role: "user" | "assistant" | "system"; content: string }[];
   context?: Record<string, any>;
   system?: string;
-}): Promise<{ content: string; configured: boolean; model: string }> {
+}): Promise<{ content: string; configured: boolean; model: string; providerStatus?: number }> {
   if (!isAIConfigured()) {
     return {
       content:
@@ -130,7 +151,7 @@ export async function generateAIResponse({
   for (const modelName of await getGeminiModelCandidates()) {
     try {
       const result = await generateText({
-        model: google(modelName),
+        model: getGoogleProvider()(modelName),
         system: enrichedSystem,
         messages,
         temperature: 0.7,
@@ -157,6 +178,7 @@ export async function generateAIResponse({
       "⚠️ **AI service is temporarily unavailable.** Please try again in a moment. If this persists, verify the Gemini API key and model configuration in your deployment environment.",
     configured: true,
     model: "error",
+    providerStatus: getProviderStatus(lastError),
   };
 }
 
@@ -177,6 +199,7 @@ export async function generateAICodeReview({
   findings: { category: string; severity: "info" | "warning" | "critical"; message: string }[];
   suggestions: string[];
   configured: boolean;
+  providerStatus?: number;
 }> {
   const reviewId = `ai-rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
@@ -250,7 +273,7 @@ ${code}
   for (const modelName of await getGeminiModelCandidates()) {
     try {
       const result = await generateText({
-        model: google(modelName),
+        model: getGoogleProvider()(modelName),
         system: "You are an expert Principal Software Engineer and AST/Security Code Reviewer. Return only valid JSON.",
         prompt,
         temperature: 0.2,
@@ -275,6 +298,7 @@ ${code}
       findings: [],
       suggestions: [],
       configured: true,
+      providerStatus: getProviderStatus(lastError),
     };
   }
 

@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
         content: response.content,
         model: response.model,
         configured: response.configured,
+        providerStatus: response.providerStatus,
         timestamp: new Date().toISOString(),
       },
     });

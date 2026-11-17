@@ -1,18 +1,16 @@
 import * as schema from "./schema";
 
-let dbInstance: any = null;
-let rawClientInstance: any = null;
-
 export function getRawClient() {
   getDb();
-  return rawClientInstance;
+  return (globalThis as any).__qbitx_raw_client;
 }
 
 export function getDb() {
-  if (dbInstance) return dbInstance;
+  const g = globalThis as any;
+  if (g.__qbitx_db_instance) return g.__qbitx_db_instance;
 
   const databaseUrl = process.env.DATABASE_URL;
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = process.env.NODE_ENV === "production" && process.env.ALLOW_PGLITE_TEST !== "true";
 
   // Production Enforcement: Strict Neon PostgreSQL requirement
   if (isProduction) {
@@ -26,9 +24,9 @@ export function getDb() {
     const { neon } = require("@neondatabase/serverless");
     const { drizzle } = require("drizzle-orm/neon-http");
     const sql = neon(databaseUrl);
-    rawClientInstance = sql;
-    dbInstance = drizzle(sql, { schema });
-    return dbInstance;
+    g.__qbitx_raw_client = sql;
+    g.__qbitx_db_instance = drizzle(sql, { schema });
+    return g.__qbitx_db_instance;
   }
 
   // Development / Test Environments: Use remote Neon if configured
@@ -36,19 +34,21 @@ export function getDb() {
     const { neon } = require("@neondatabase/serverless");
     const { drizzle } = require("drizzle-orm/neon-http");
     const sql = neon(databaseUrl);
-    rawClientInstance = sql;
-    dbInstance = drizzle(sql, { schema });
-    return dbInstance;
+    g.__qbitx_raw_client = sql;
+    g.__qbitx_db_instance = drizzle(sql, { schema });
+    return g.__qbitx_db_instance;
   }
 
   // Explicit Local Development & Test: Embedded PostgreSQL via PGlite
   const { PGlite } = require("@electric-sql/pglite");
   const { drizzle } = require("drizzle-orm/pglite");
 
-  const client = new PGlite(process.env.NODE_ENV === "test" ? undefined : "./.local-db");
-  rawClientInstance = client;
-  dbInstance = drizzle(client, { schema });
-  return dbInstance;
+  if (!g.__qbitx_pglite_client) {
+    g.__qbitx_pglite_client = new PGlite(process.env.NODE_ENV === "test" ? undefined : "./.local-db");
+  }
+  g.__qbitx_raw_client = g.__qbitx_pglite_client;
+  g.__qbitx_db_instance = drizzle(g.__qbitx_pglite_client, { schema });
+  return g.__qbitx_db_instance;
 }
 
 export const db = new Proxy({} as any, {

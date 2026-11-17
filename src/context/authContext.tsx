@@ -70,6 +70,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data: sessionData, isPending } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -86,8 +87,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isVerified: !!u.emailVerified,
         isApproved: u.role === "mentor" ? false : true,
       });
+      setHasLoadedInitially(true);
     } else if (!isPending) {
-      setProfile(null);
+      authClient
+        .getSession()
+        .then((res) => {
+          if (res.data?.user) {
+            const u = res.data.user as any;
+            setProfile({
+              id: u.id,
+              email: u.email,
+              name: u.name,
+              role: u.role || "student",
+              status: u.status || "active",
+              image: u.image,
+              avatarUrl: u.image,
+              isVerified: !!u.emailVerified,
+              isApproved: u.role === "mentor" ? false : true,
+            });
+          } else {
+            setProfile(null);
+          }
+          setHasLoadedInitially(true);
+        })
+        .catch(() => {
+          setProfile(null);
+          setHasLoadedInitially(true);
+        });
     }
   }, [sessionData, isPending]);
 
@@ -205,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user: profile,
-        isLoading: isPending,
+        isLoading: isPending || !hasLoadedInitially,
         login,
         registerStudent,
         registerMentor,

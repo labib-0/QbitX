@@ -26,7 +26,10 @@ export default defineConfig({
   webServer: {
     command: "npx next start -p 3007",
     url: "http://localhost:3007/login",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30000,
+    env: {
+      ALLOW_PGLITE_TEST: "true",
+    },
   },
 });

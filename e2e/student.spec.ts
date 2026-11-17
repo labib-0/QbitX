@@ -43,7 +43,7 @@ test.describe("Student End-to-End Browser Journey", () => {
     await page.goto(`/verify-email?email=${encodeURIComponent(uniqueEmail)}`);
     await page.waitForLoadState("domcontentloaded");
 
-    await expect(page.locator("h3")).toContainText("Check Your Email Inbox");
+    await expect(page.getByRole("heading", { name: "Check Your Email Inbox" })).toBeVisible();
     await expect(page.locator("button:has-text('Resend Verification Email')")).toBeVisible();
 
     // 2. Visit with invalid verification token - ensure rejection
@@ -115,7 +115,7 @@ test.describe("Student End-to-End Browser Journey", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Check workspace title
-    await expect(page.locator("text=Next.js App Router Architecture")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("text=Next.js App Router Architecture").first()).toBeVisible({ timeout: 10000 });
 
     // Check YouTube iframe embed with privacy nocookie URL
     const iframe = page.locator("iframe");
@@ -129,8 +129,8 @@ test.describe("Student End-to-End Browser Journey", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Check public portfolio displays student info
-    await expect(page.locator("text=Alex Rivera")).toBeVisible({ timeout: 10000 });
-    await expect(page.locator("text=Full-Stack Web & AI Engineering")).toBeVisible();
+    await expect(page.locator("text=Alex Rivera").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("text=Full-Stack Web & AI Engineering").first()).toBeVisible({ timeout: 10000 });
 
     // Responsive verification: verify page doesn't produce horizontal scrollbar
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);

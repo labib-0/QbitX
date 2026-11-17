@@ -8,20 +8,67 @@ export function isAIConfigured(): boolean {
 }
 
 /**
- * Gemini models are retired over time (e.g. gemini-1.5-flash). Try the
- * configured model first, then current aliases so a deprecation does not take
- * the AI mentor offline.
+ * Gemini models are retired frequently (2.x models already reject new API
+ * keys). Ask the API which text models this key can actually use, cache the
+ * answer, and fall back to current static names if discovery is unavailable.
  */
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+
 const DEFAULT_GEMINI_MODELS = [
+  "gemini-3.8-flash",
   "gemini-flash-latest",
+  "gemini-3.5-flash",
   "gemini-2.5-flash",
-  "gemini-2.0-flash",
 ];
 
-export function getGeminiModelCandidates(): string[] {
+let discoveryCache: { models: string[]; expiresAt: number } | null = null;
+
+async function discoverGeminiModels(): Promise<string[]> {
+  if (discoveryCache && discoveryCache.expiresAt > Date.now()) {
+    return discoveryCache.models;
+  }
+
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const response = await fetch(`${GEMINI_API_BASE}/models?pageSize=1000`, {
+      headers: { "x-goog-api-key": apiKey },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[ai] Gemini model discovery failed with status ${response.status}.`);
+      return [];
+    }
+
+    const payload: any = await response.json();
+    const models: string[] = (payload.models || [])
+      .filter(
+        (model: any) =>
+          Array.isArray(model.supportedGenerationMethods) &&
+          model.supportedGenerationMethods.includes("generateContent")
+      )
+      .map((model: any) => String(model.name || "").replace(/^models\//, ""))
+      .filter(
+        (name: string) =>
+          Boolean(name) && !/(tts|image|audio|live|robotics|embedding|aqa|learnlm)/i.test(name)
+      );
+
+    discoveryCache = { models, expiresAt: Date.now() + 60 * 60 * 1000 };
+    return models;
+  } catch (error) {
+    console.warn("[ai] Gemini model discovery failed:", error);
+    return [];
+  }
+}
+
+export async function getGeminiModelCandidates(): Promise<string[]> {
+  const discovered = await discoverGeminiModels();
+
   return Array.from(
     new Set(
-      [process.env.GEMINI_MODEL, ...DEFAULT_GEMINI_MODELS].filter(
+      [process.env.GEMINI_MODEL, ...discovered, ...DEFAULT_GEMINI_MODELS].filter(
         (model): model is string => Boolean(model)
       )
     )
@@ -80,7 +127,7 @@ export async function generateAIResponse({
 
   let lastError: any = null;
 
-  for (const modelName of getGeminiModelCandidates()) {
+  for (const modelName of await getGeminiModelCandidates()) {
     try {
       const result = await generateText({
         model: google(modelName),
@@ -200,7 +247,7 @@ ${code}
   let resultText: string | null = null;
   let lastError: any = null;
 
-  for (const modelName of getGeminiModelCandidates()) {
+  for (const modelName of await getGeminiModelCandidates()) {
     try {
       const result = await generateText({
         model: google(modelName),

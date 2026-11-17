@@ -15,6 +15,7 @@ const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const DEFAULT_GEMINI_MODELS = [
   "gemini-flash-latest",
   "gemini-3.8-flash",
+  "gemini-flash-lite-latest",
   "gemini-3.5-flash",
   "gemini-2.5-flash",
 ];
@@ -202,7 +203,7 @@ export async function generateAIResponse({
   model: string;
   providerStatus?: number;
   providerMessage?: string;
-  attempts?: { model: string; status?: number }[];
+  attempts?: { model: string; status?: number; message?: string }[];
   discovery?: { status?: number; count: number };
 }> {
   if (!isAIConfigured()) {
@@ -228,9 +229,9 @@ export async function generateAIResponse({
   ];
 
   let lastError: any = null;
-  const attempts: { model: string; status?: number }[] = [];
+  const attempts: { model: string; status?: number; message?: string }[] = [];
 
-  for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 4)) {
     try {
       const resultText = await callGeminiGenerate({
         model: modelName,
@@ -246,7 +247,11 @@ export async function generateAIResponse({
       };
     } catch (error: any) {
       lastError = error;
-      attempts.push({ model: modelName, status: getProviderStatus(error) });
+      attempts.push({
+        model: modelName,
+        status: getProviderStatus(error),
+        message: String(error?.message || error || "").slice(0, 160),
+      });
       if (isModelUnavailableError(error) || isTransientProviderError(error)) {
         console.warn(`[ai] Gemini model '${modelName}' is unavailable; trying the next candidate.`);
         continue;

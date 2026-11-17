@@ -7,6 +7,32 @@ export function isAIConfigured(): boolean {
   return !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
 }
 
+/**
+ * Gemini models are retired over time (e.g. gemini-1.5-flash). Try the
+ * configured model first, then current aliases so a deprecation does not take
+ * the AI mentor offline.
+ */
+const DEFAULT_GEMINI_MODELS = [
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+];
+
+export function getGeminiModelCandidates(): string[] {
+  return Array.from(
+    new Set(
+      [process.env.GEMINI_MODEL, ...DEFAULT_GEMINI_MODELS].filter(
+        (model): model is string => Boolean(model)
+      )
+    )
+  );
+}
+
+function isModelUnavailableError(error: any): boolean {
+  const message = String(error?.message || error || "");
+  return /model/i.test(message) && /not found|not supported|unsupported|404|ListModels/i.test(message);
+}
+
 export const QBITX_SYSTEM_PROMPT = `You are the QbitX AI Engineering Mentor, an intelligent software engineering tutor and pedagogical assistant for university computer science and software engineering students.
 
 Your role:
@@ -39,43 +65,52 @@ export async function generateAIResponse({
     };
   }
 
-  try {
-    const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-    const model = google(modelName);
-
-    let enrichedSystem = system;
-    if (context) {
-      enrichedSystem += `\n\nCurrent student context:\n- Active course/topic: ${context.courseTitle || "General Engineering"}\n- Current level: ${context.level || "Undergraduate"}`;
-    }
-
-    const messages = [
-      ...conversationHistory.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      { role: "user" as const, content: prompt },
-    ];
-
-    const result = await generateText({
-      model,
-      system: enrichedSystem,
-      messages,
-      temperature: 0.7,
-    });
-
-    return {
-      content: result.text,
-      configured: true,
-      model: modelName,
-    };
-  } catch (error: any) {
-    console.error("Gemini AI generation error:", error);
-    return {
-      content: `⚠️ **AI Service Error:** ${error.message || "Unable to reach Gemini API. Please check your network and API quota."}`,
-      configured: true,
-      model: "error",
-    };
+  let enrichedSystem = system;
+  if (context) {
+    enrichedSystem += `\n\nCurrent student context:\n- Active course/topic: ${context.courseTitle || "General Engineering"}\n- Current level: ${context.level || "Undergraduate"}`;
   }
+
+  const messages = [
+    ...conversationHistory.map((m) => ({
+      role: m.role,
+      content: m.content,
+    })),
+    { role: "user" as const, content: prompt },
+  ];
+
+  let lastError: any = null;
+
+  for (const modelName of getGeminiModelCandidates()) {
+    try {
+      const result = await generateText({
+        model: google(modelName),
+        system: enrichedSystem,
+        messages,
+        temperature: 0.7,
+      });
+
+      return {
+        content: result.text,
+        configured: true,
+        model: modelName,
+      };
+    } catch (error: any) {
+      lastError = error;
+      if (isModelUnavailableError(error)) {
+        console.warn(`[ai] Gemini model '${modelName}' is unavailable; trying the next candidate.`);
+        continue;
+      }
+      break;
+    }
+  }
+
+  console.error("Gemini AI generation error:", lastError);
+  return {
+    content:
+      "⚠️ **AI service is temporarily unavailable.** Please try again in a moment. If this persists, verify the Gemini API key and model configuration in your deployment environment.",
+    configured: true,
+    model: "error",
+  };
 }
 
 /**
@@ -133,9 +168,7 @@ export async function generateAICodeReview({
     };
   }
 
-  try {
-    const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-    const prompt = `Perform a comprehensive, professional code review on the following ${language} code.
+  const prompt = `Perform a comprehensive, professional code review on the following ${language} code.
 
 Analyze for:
 1. Correctness & edge cases
@@ -164,57 +197,74 @@ Code to review:
 ${code}
 \`\`\``;
 
-    const result = await generateText({
-      model: google(modelName),
-      system: "You are an expert Principal Software Engineer and AST/Security Code Reviewer. Return only valid JSON.",
-      prompt,
-      temperature: 0.2,
-    });
+  let resultText: string | null = null;
+  let lastError: any = null;
 
-    let parsed: any;
+  for (const modelName of getGeminiModelCandidates()) {
     try {
-      const cleanJson = result.text.replace(/```json/g, "").replace(/```/g, "").trim();
-      parsed = JSON.parse(cleanJson);
-    } catch (parseError) {
-      parsed = {
-        summary: "Code review generated successfully.",
-        findings: [
-          {
-            category: "General",
-            severity: "info",
-            message: result.text.substring(0, 500),
-          },
-        ],
-        suggestions: ["Refactor according to standard conventions."],
-      };
+      const result = await generateText({
+        model: google(modelName),
+        system: "You are an expert Principal Software Engineer and AST/Security Code Reviewer. Return only valid JSON.",
+        prompt,
+        temperature: 0.2,
+      });
+      resultText = result.text;
+      break;
+    } catch (error: any) {
+      lastError = error;
+      if (isModelUnavailableError(error)) {
+        console.warn(`[ai] Gemini model '${modelName}' is unavailable for code review; trying the next candidate.`);
+        continue;
+      }
+      break;
     }
+  }
 
-    const reviewRecord = {
-      id: reviewId,
-      userId: userId || "anonymous",
-      language,
-      codeSnippet: code.substring(0, 5000),
-      summary: parsed.summary || "Code review completed.",
-      findings: parsed.findings || [],
-      suggestions: parsed.suggestions || [],
-    };
-
-    if (userId) {
-      await db.insert(schema.aiCodeReviews).values(reviewRecord);
-    }
-
-    return {
-      ...reviewRecord,
-      configured: true,
-    };
-  } catch (error: any) {
-    console.error("AI code review error:", error);
+  if (resultText === null) {
+    console.error("AI code review error:", lastError);
     return {
       id: reviewId,
-      summary: `Code review failed: ${error.message || "Unknown error"}`,
+      summary: "The AI code review service is temporarily unavailable. Please try again shortly.",
       findings: [],
       suggestions: [],
       configured: true,
     };
   }
+
+  let parsed: any;
+  try {
+    const cleanJson = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
+    parsed = JSON.parse(cleanJson);
+  } catch (parseError) {
+    parsed = {
+      summary: "Code review generated successfully.",
+      findings: [
+        {
+          category: "General",
+          severity: "info",
+          message: resultText.substring(0, 500),
+        },
+      ],
+      suggestions: ["Refactor according to standard conventions."],
+    };
+  }
+
+  const reviewRecord = {
+    id: reviewId,
+    userId: userId || "anonymous",
+    language,
+    codeSnippet: code.substring(0, 5000),
+    summary: parsed.summary || "Code review completed.",
+    findings: parsed.findings || [],
+    suggestions: parsed.suggestions || [],
+  };
+
+  if (userId) {
+    await db.insert(schema.aiCodeReviews).values(reviewRecord);
+  }
+
+  return {
+    ...reviewRecord,
+    configured: true,
+  };
 }

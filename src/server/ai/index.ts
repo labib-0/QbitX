@@ -28,11 +28,21 @@ function getGoogleProvider() {
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 const DEFAULT_GEMINI_MODELS = [
-  "gemini-3.8-flash",
   "gemini-flash-latest",
+  "gemini-3.8-flash",
   "gemini-3.5-flash",
   "gemini-2.5-flash",
 ];
+
+/** Rank current text models first so retired generations are tried last. */
+function rankModel(name: string): number {
+  if (name === "gemini-flash-latest") return 1000;
+  const match = name.match(/^gemini-(\d+)(?:\.(\d+))?-(flash|flash-lite|pro)/);
+  if (!match) return 0;
+  const version = Number(match[1]) + Number(match[2] || 0) / 10;
+  const family = match[3] === "flash" ? 3 : match[3] === "flash-lite" ? 2 : 1;
+  return Math.round(version * 100) + family;
+}
 
 let discoveryCache: { models: string[]; expiresAt: number } | null = null;
 let lastDiscovery: { status?: number; count: number } = { count: 0 };
@@ -68,7 +78,8 @@ async function discoverGeminiModels(): Promise<string[]> {
       .filter(
         (name: string) =>
           Boolean(name) && !/(tts|image|audio|live|robotics|embedding|aqa|learnlm)/i.test(name)
-      );
+      )
+      .sort((a: string, b: string) => rankModel(b) - rankModel(a));
 
     discoveryCache = { models, expiresAt: Date.now() + 60 * 60 * 1000 };
     lastDiscovery = { status: response.status, count: models.length };
@@ -92,8 +103,14 @@ export async function getGeminiModelCandidates(): Promise<string[]> {
 }
 
 function isModelUnavailableError(error: any): boolean {
+  if (getProviderStatus(error) === 404) return true;
   const message = String(error?.message || error || "");
-  return /model/i.test(message) && /not found|not supported|unsupported|404|ListModels/i.test(message);
+  return (
+    /model/i.test(message) &&
+    /not found|not supported|unsupported|no longer available|not available|deprecated|ListModels|update your code/i.test(
+      message
+    )
+  );
 }
 
 /** HTTP status from the provider, without exposing the provider's message. */

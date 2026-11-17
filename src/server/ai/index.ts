@@ -114,6 +114,16 @@ function isModelUnavailableError(error: any): boolean {
 }
 
 /** HTTP status from the provider, without exposing the provider's message. */
+function isTransientProviderError(error: any): boolean {
+  const status = getProviderStatus(error);
+  if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+  return /high demand|temporar|overload|try again later|resource_exhausted|unavailable|timeout|ETIMEDOUT|ECONNRESET/i.test(
+    String(error?.message || error || "")
+  );
+}
+
 function getProviderStatus(error: any): number | undefined {
   const direct = Number(error?.statusCode ?? error?.status ?? error?.cause?.status);
   if (Number.isInteger(direct) && direct >= 400 && direct < 600) return direct;
@@ -177,7 +187,7 @@ export async function generateAIResponse({
   let lastError: any = null;
   const attempts: { model: string; status?: number }[] = [];
 
-  for (const modelName of await getGeminiModelCandidates()) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 6)) {
     try {
       const result = await generateText({
         model: getGoogleProvider()(modelName),
@@ -194,7 +204,7 @@ export async function generateAIResponse({
     } catch (error: any) {
       lastError = error;
       attempts.push({ model: modelName, status: getProviderStatus(error) });
-      if (isModelUnavailableError(error)) {
+      if (isModelUnavailableError(error) || isTransientProviderError(error)) {
         console.warn(`[ai] Gemini model '${modelName}' is unavailable; trying the next candidate.`);
         continue;
       }
@@ -207,8 +217,9 @@ export async function generateAIResponse({
   const hint =
     providerStatus === 401 || providerStatus === 403
       ? "Google rejected the Gemini API key. If your key starts with `AQ.`, open Google Cloud Console → APIs & Services → Credentials, edit the key, set its API restrictions to **Generative Language API**, and save (allow a minute). Otherwise create a new key at https://aistudio.google.com/apikey and update `GOOGLE_GENERATIVE_AI_API_KEY` in your deployment environment, then redeploy."
-      : providerStatus === 429
-        ? "The Gemini API quota has been reached. Check your usage and limits at https://aistudio.google.com/."
+      : providerStatus === 429 ||
+          /high demand|overload|temporar|unavailable|quota/i.test(String(lastError?.message || ""))
+        ? "Google's Gemini service is busy or has reached its quota right now. Please try again in a minute."
         : "Please try again in a moment. If this persists, verify the Gemini API key and model configuration in your deployment environment.";
 
   return {
@@ -310,7 +321,7 @@ ${code}
   let resultText: string | null = null;
   let lastError: any = null;
 
-  for (const modelName of await getGeminiModelCandidates()) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 6)) {
     try {
       const result = await generateText({
         model: getGoogleProvider()(modelName),
@@ -322,7 +333,7 @@ ${code}
       break;
     } catch (error: any) {
       lastError = error;
-      if (isModelUnavailableError(error)) {
+      if (isModelUnavailableError(error) || isTransientProviderError(error)) {
         console.warn(`[ai] Gemini model '${modelName}' is unavailable for code review; trying the next candidate.`);
         continue;
       }

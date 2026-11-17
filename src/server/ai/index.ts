@@ -1,23 +1,8 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateText, streamText } from "ai";
 import { db, schema } from "@/server/db";
 import { eq, desc } from "drizzle-orm";
 
 export function isAIConfigured(): boolean {
   return !!(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY);
-}
-
-let googleProvider: ReturnType<typeof createGoogleGenerativeAI> | null = null;
-
-/** Build the provider with whichever Gemini key name is configured. */
-function getGoogleProvider() {
-  if (!googleProvider) {
-    googleProvider = createGoogleGenerativeAI({
-      apiKey:
-        process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY || "",
-    });
-  }
-  return googleProvider;
 }
 
 /**
@@ -131,6 +116,64 @@ function getProviderStatus(error: any): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
+/**
+ * Call Gemini's documented generateContent endpoint directly. The older AI SDK
+ * provider hangs against current models, so keep the request explicit and
+ * bounded.
+ */
+async function callGeminiGenerate({
+  model,
+  system,
+  messages,
+  temperature,
+}: {
+  model: string;
+  system: string;
+  messages: { role: "user" | "assistant" | "system"; content: string }[];
+  temperature: number;
+}): Promise<string> {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("Gemini API key is not configured.");
+
+  const response = await fetch(
+    `${GEMINI_API_BASE}/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: messages.map((message) => ({
+          role: message.role === "assistant" ? "model" : "user",
+          parts: [{ text: message.content }],
+        })),
+        generationConfig: { temperature },
+      }),
+      signal: AbortSignal.timeout(15000),
+    }
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Gemini API ${response.status}: ${body.slice(0, 300)}`);
+  }
+
+  const payload: any = await response.json();
+  const text = (payload.candidates?.[0]?.content?.parts || [])
+    .map((part: any) => part?.text)
+    .filter((part: unknown): part is string => typeof part === "string" && part.length > 0)
+    .join("");
+
+  if (!text) {
+    const finishReason = payload.candidates?.[0]?.finishReason || "unknown";
+    throw new Error(`Gemini returned no text (finishReason: ${finishReason}).`);
+  }
+
+  return text;
+}
+
 export const QBITX_SYSTEM_PROMPT = `You are the QbitX AI Engineering Mentor, an intelligent software engineering tutor and pedagogical assistant for university computer science and software engineering students.
 
 Your role:
@@ -189,17 +232,15 @@ export async function generateAIResponse({
 
   for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
-      const result = await generateText({
-        model: getGoogleProvider()(modelName),
+      const resultText = await callGeminiGenerate({
+        model: modelName,
         system: enrichedSystem,
         messages,
         temperature: 0.7,
-        maxRetries: 0,
-        abortSignal: AbortSignal.timeout(15000),
       });
 
       return {
-        content: result.text,
+        content: resultText,
         configured: true,
         model: modelName,
       };
@@ -325,15 +366,12 @@ ${code}
 
   for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
-      const result = await generateText({
-        model: getGoogleProvider()(modelName),
+      resultText = await callGeminiGenerate({
+        model: modelName,
         system: "You are an expert Principal Software Engineer and AST/Security Code Reviewer. Return only valid JSON.",
-        prompt,
+        messages: [{ role: "user", content: prompt }],
         temperature: 0.2,
-        maxRetries: 0,
-        abortSignal: AbortSignal.timeout(15000),
       });
-      resultText = result.text;
       break;
     } catch (error: any) {
       lastError = error;

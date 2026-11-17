@@ -1,7 +1,5 @@
-// GET  /api/workspace/discussions -> Fetch threads for a lesson
-// POST /api/workspace/discussions -> Post thread or comment
-
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/server/auth/session";
 import { WorkspaceService } from "@/services/workspace/WorkspaceService";
 
 export async function GET(request: NextRequest) {
@@ -18,28 +16,46 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const context = await requireUser();
     const body = await request.json();
-    const { threadId, lessonId = "les-1", title, content, authorId, authorName, authorRole = "student" } = body;
+    const { threadId, lessonId = "les-1", title, content } = body;
+
+    if (!content || !content.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Content is required" },
+        { status: 400 }
+      );
+    }
+
+    const authorRole: "student" | "mentor" | "admin" =
+      context.user.role === "super_admin" ? "admin" : context.user.role;
 
     if (threadId) {
       // Adding a comment to existing thread
       const comment = WorkspaceService.addComment(threadId, lessonId, {
-        authorId,
-        authorName,
+        authorId: context.user.id,
+        authorName: context.user.name,
         authorRole,
-        content,
+        content: content.trim(),
       });
       return NextResponse.json({ success: true, data: comment });
+    }
+
+    if (!title || !title.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Title is required for a new thread" },
+        { status: 400 }
+      );
     }
 
     // Creating new thread
     const thread = WorkspaceService.addDiscussion({
       lessonId,
-      authorId,
-      authorName,
+      authorId: context.user.id,
+      authorName: context.user.name,
       authorRole,
-      title,
-      content,
+      title: title.trim(),
+      content: content.trim(),
       isPinned: false,
       isResolved: false,
       tags: body.tags || [],
@@ -47,6 +63,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: thread });
   } catch (error: any) {
+    if (error.name === "UnauthorizedError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
+    if (error.name === "ForbiddenError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }

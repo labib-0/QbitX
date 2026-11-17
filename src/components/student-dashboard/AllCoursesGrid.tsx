@@ -1,244 +1,176 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, X, PlayCircle, Clock, CheckCircle2, BarChart2 } from "lucide-react";
+import { ArrowUpRight, BookOpen, X, PlayCircle, Clock, CheckCircle2, BarChart2, PlusCircle, RefreshCw } from "lucide-react";
 
-interface CourseCardItem {
+interface CourseItem {
   id: string;
-  category: "Main Courses" | "Conceptual Sessions" | "Advanced Track" | "Lab Mastery";
+  slug: string;
   title: string;
-  thumbnail: string;
-  instructor: string;
-  modules: number;
-  completedModules: number;
-  duration: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  thumbnailUrl?: string | null;
+  instructorName?: string | null;
+  durationHours?: number | null;
+  isEnrolled?: boolean;
+  progressPercent?: number;
 }
 
 export function AllCoursesGrid() {
-  const [selectedCourse, setSelectedCourse] = useState<CourseCardItem | null>(null);
+  const [courses, setCourses] = useState<CourseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
+  const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
 
-  const courses: CourseCardItem[] = [
-    {
-      id: "course-1",
-      category: "Main Courses",
-      title: "CS Fundamentals With QbitX: Spring 2026",
-      thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600",
-      instructor: "Dr. Sarah Chen",
-      modules: 12,
-      completedModules: 12,
-      duration: "8 weeks",
-    },
-    {
-      id: "course-2",
-      category: "Conceptual Sessions",
-      title: "CS Fundamentals With QbitX (Conceptual Sessions)",
-      thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
-      instructor: "Dr. Sarah Chen",
-      modules: 16,
-      completedModules: 8,
-      duration: "6 weeks",
-    },
-    {
-      id: "course-3",
-      category: "Advanced Track",
-      title: "Advanced Data Structures & System Architecture",
-      thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600",
-      instructor: "Prof. Alex Kim",
-      modules: 14,
-      completedModules: 4,
-      duration: "10 weeks",
-    },
-    {
-      id: "course-4",
-      category: "Lab Mastery",
-      title: "Full-Stack Web Engineering & Cloud Deployment",
-      thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=600",
-      instructor: "Dr. Maya Patel",
-      modules: 20,
-      completedModules: 4,
-      duration: "12 weeks",
-    },
-  ];
+  useEffect(() => {
+    async function loadCourses() {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/content/courses");
+        const json = await res.json();
+        if (json.success && json.data) {
+          setCourses(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load courses:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const CATEGORY_COLORS: Record<string, string> = {
-    "Main Courses": "bg-amber-600",
-    "Conceptual Sessions": "bg-emerald-600",
-    "Advanced Track": "bg-indigo-600",
-    "Lab Mastery": "bg-purple-600",
+    loadCourses();
+  }, []);
+
+  const handleEnroll = async (courseId: string) => {
+    try {
+      setEnrollingId(courseId);
+      const res = await fetch("/api/content/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setCourses((prev) =>
+          prev.map((c) => (c.id === courseId ? { ...c, isEnrolled: true } : c))
+        );
+        if (selectedCourse?.id === courseId) {
+          setSelectedCourse({ ...selectedCourse, isEnrolled: true });
+        }
+      }
+    } catch (err) {
+      console.error("Enrollment failed:", err);
+    } finally {
+      setEnrollingId(null);
+    }
   };
 
+  const categories = ["All", ...Array.from(new Set(courses.map((c) => c.category)))];
+  const filteredCourses = activeCategory === "All"
+    ? courses
+    : courses.filter((c) => c.category === activeCategory);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center space-x-2 text-muted-foreground text-xs font-heading">
+        <RefreshCw className="h-5 w-5 animate-spin text-sky-500" />
+        <span>Loading Curriculum Catalog...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl sm:text-2xl font-extrabold text-foreground font-heading flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-sky-500" />
-          <span>All Enrolled Courses</span>
-        </h2>
-        <span className="text-xs font-extrabold text-muted-foreground bg-muted px-3 py-1 rounded-full border border-border">
-          {courses.length} Active Courses
-        </span>
+    <div className="space-y-6">
+      {/* Category Pills Filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeCategory === cat
+                ? "bg-sky-500 text-white shadow-md shadow-sky-500/20"
+                : "bg-card border border-border text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-        {courses.map((course) => {
-          const progress = Math.round((course.completedModules / course.modules) * 100);
+      {/* Courses Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCourses.map((course) => {
+          const thumbnail =
+            course.thumbnailUrl ||
+            "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600";
+
           return (
             <div
               key={course.id}
-              className="group rounded-3xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl hover:border-sky-500/40 transition-all flex flex-col justify-between"
+              className="group rounded-3xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl hover:border-sky-500/40 transition-all flex flex-col"
             >
-              {/* Thumbnail */}
-              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-muted">
+              <div className="relative h-44 w-full overflow-hidden bg-slate-900">
                 <Image
-                  src={course.thumbnail}
+                  src={thumbnail}
                   alt={course.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 left-3">
-                  <span className={`text-[11px] font-extrabold uppercase px-3 py-1 rounded-lg text-white shadow-md ${CATEGORY_COLORS[course.category]}`}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-lg bg-sky-500 text-white font-heading">
                     {course.category}
                   </span>
-                </div>
-                {/* Progress pill on thumbnail */}
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-lg text-white text-[11px] font-bold">
-                  {progress}% done
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-black/60 text-slate-300 font-heading">
+                    {course.difficulty}
+                  </span>
                 </div>
               </div>
 
-              {/* Content & Action */}
-              <div className="p-5 sm:p-6 space-y-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <h3 className="font-extrabold text-base text-foreground font-heading leading-snug">
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-extrabold text-foreground font-heading line-clamp-2 leading-snug">
                     {course.title}
                   </h3>
-                  {/* Mini progress bar */}
-                  <div className="space-y-1">
-                    <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          progress === 100 ? "bg-emerald-500" : "bg-sky-500"
-                        }`}
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground font-medium">
-                      {course.completedModules}/{course.modules} modules
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {course.description}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-medium">
+                    Instructor: <span className="font-bold text-foreground">{course.instructorName || "Faculty"}</span>
+                  </p>
                 </div>
 
-                <button
-                  onClick={() => setSelectedCourse(course)}
-                  className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-extrabold transition-all shadow-md ${
-                    course.category === "Main Courses"
-                      ? "bg-sky-500 hover:bg-sky-600 text-white shadow-sky-500/20"
-                      : "border border-sky-500 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
-                  }`}
-                >
-                  <span>Continue Course</span>
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
+                <div className="pt-2 flex items-center gap-2">
+                  <Link
+                    href={`/student/workspace?courseId=${course.id}`}
+                    className="flex-1 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-sky-500/20 font-heading"
+                  >
+                    <span>Start Learning</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+
+                  <button
+                    onClick={() => handleEnroll(course.id)}
+                    disabled={enrollingId === course.id}
+                    title="Quick Enroll"
+                    className="p-2.5 rounded-xl border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                  >
+                    {enrollingId === course.id ? (
+                      <RefreshCw className="h-4 w-4 animate-spin text-sky-500" />
+                    ) : (
+                      <PlusCircle className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* ── Course Detail Modal (replaces alert) ── */}
-      {selectedCourse && (
-        <div
-          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={(e) => { if (e.target === e.currentTarget) setSelectedCourse(null); }}
-        >
-          <div className="w-full max-w-lg rounded-3xl border border-border bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-            
-            {/* Modal Thumbnail */}
-            <div className="relative h-48 w-full">
-              <Image
-                src={selectedCourse.thumbnail}
-                alt={selectedCourse.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-              <button
-                onClick={() => setSelectedCourse(null)}
-                className="absolute top-3 right-3 p-1.5 rounded-xl bg-black/40 hover:bg-black/60 text-white transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              <div className="absolute bottom-4 left-4 right-4">
-                <span className={`text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg text-white mb-2 inline-block ${CATEGORY_COLORS[selectedCourse.category]}`}>
-                  {selectedCourse.category}
-                </span>
-                <h2 className="text-lg font-extrabold text-white font-heading leading-snug">
-                  {selectedCourse.title}
-                </h2>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-5">
-              
-              {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: BarChart2, label: "Progress", value: `${Math.round((selectedCourse.completedModules / selectedCourse.modules) * 100)}%`, color: "text-sky-500" },
-                  { icon: CheckCircle2, label: "Modules", value: `${selectedCourse.completedModules}/${selectedCourse.modules}`, color: "text-emerald-500" },
-                  { icon: Clock, label: "Duration", value: selectedCourse.duration, color: "text-purple-500" },
-                ].map((stat, i) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div key={i} className="text-center p-3 rounded-2xl bg-muted/40 border border-border/50">
-                      <Icon className={`h-4 w-4 mx-auto mb-1 ${stat.color}`} />
-                      <p className="text-sm font-extrabold text-foreground">{stat.value}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium">{stat.label}</p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                  <span>Overall Progress</span>
-                  <span>{Math.round((selectedCourse.completedModules / selectedCourse.modules) * 100)}%</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 transition-all duration-700"
-                    style={{ width: `${Math.round((selectedCourse.completedModules / selectedCourse.modules) * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Instructor: <span className="font-bold text-foreground">{selectedCourse.instructor}</span>
-              </p>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-1">
-                <button
-                  onClick={() => setSelectedCourse(null)}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-muted text-foreground hover:bg-muted/80 transition-colors"
-                >
-                  Close
-                </button>
-                <Link
-                  href={`/student/workspace?courseId=${selectedCourse.id}&lessonId=les-1`}
-                  className="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-600 text-white transition-colors flex items-center justify-center gap-2 shadow-md shadow-sky-500/20"
-                >
-                  <PlayCircle className="h-4 w-4" />
-                  Launch Workspace
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

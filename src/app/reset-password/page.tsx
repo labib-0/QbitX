@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
 import { SuccessModal } from "@/components/auth/SuccessModal";
 import { ArrowRight, RefreshCw } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(token ? "" : "Password reset token is missing or invalid. Please request a new link.");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const router = useRouter();
@@ -20,6 +23,11 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!token) {
+      setError("Cannot reset password: token is missing. Please check your reset link.");
+      return;
+    }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
@@ -34,10 +42,19 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const res = await authClient.resetPassword({
+        newPassword: password,
+        token,
+      });
+
+      if (res.error) {
+        setError(res.error.message || "Failed to update password. Token may have expired.");
+        return;
+      }
+
       setShowSuccessModal(true);
     } catch (err: any) {
-      setError("Failed to update password. Please try again.");
+      setError(err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -49,12 +66,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthLayout
-      title="Create New Password"
-      subtitle="Enter your new secure password below to complete password recovery."
-      role="student"
-      showDemoAdminBanner={false}
-    >
+    <>
       <ErrorAlert message={error} onDismiss={() => setError("")} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,7 +88,7 @@ export default function ResetPasswordPage() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !token}
           className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/25 hover:scale-[1.01] transition-transform disabled:opacity-50"
         >
           {loading ? (
@@ -97,6 +109,21 @@ export default function ResetPasswordPage() {
         buttonText="Proceed to Login"
         onConfirm={handleModalConfirm}
       />
+    </>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <AuthLayout
+      title="Create New Password"
+      subtitle="Enter your new secure password below to complete password recovery."
+      role="student"
+      showDemoAdminBanner={false}
+    >
+      <Suspense fallback={<div className="text-center py-6 text-sm text-slate-500">Loading...</div>}>
+        <ResetPasswordForm />
+      </Suspense>
     </AuthLayout>
   );
 }

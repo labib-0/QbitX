@@ -79,7 +79,7 @@ export function AiMentorSection() {
 <span className="text-purple-400">export default function</span> <span className="text-blue-300">WeatherApp</span>() {"{"}
   <span className="text-purple-400">const</span> [data, setData] = <span className="text-blue-300">useState</span>(<span className="text-cyan-300">null</span>);
 
-  <span className="text-gray-500">// I keep getting an infinite loop here!</span>
+  <span className="text-gray-500">{"// I keep getting an infinite loop here!"}</span>
   <span className="text-blue-300">useEffect</span>(() {"=>"} {"{"}
     <span className="text-blue-300">fetchData</span>();
   {"}"});

@@ -1,160 +1,217 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import {
-  UserProfile,
-  AuthService,
-  RegisterStudentParams,
-  RegisterMentorParams,
-} from "@/services/authService";
-import { supabase } from "@/lib/supabaseClient";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { authClient, useSession, signIn, signUp, signOut } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: "student" | "mentor" | "admin" | "super_admin";
+  status?: string;
+  image?: string | null;
+  avatarUrl?: string | null;
+  university?: string;
+  department?: string;
+  studentId?: string;
+  experienceLevel?: string;
+  track?: string;
+  isVerified?: boolean;
+  isApproved?: boolean;
+  onboardingCompleted?: boolean;
+}
+
+export interface RegisterStudentParams {
+  firstName: string;
+  lastName: string;
+  university?: string;
+  department?: string;
+  studentId?: string;
+  academicYear?: string;
+  email: string;
+  phone?: string;
+  password: string;
+  country?: string;
+  city?: string;
+  experience?: string;
+  track?: string;
+}
+
+export interface RegisterMentorParams {
+  fullName: string;
+  email: string;
+  phone?: string;
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  yearsOfExperience?: string;
+  areaOfExpertise?: string;
+  bio?: string;
+  password?: string;
+  photoFile?: any;
+  cvFile?: any;
+  documentsFile?: any;
+}
 
 interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
-  adminApprovedToggle: boolean; // Demo toggle for admin approval testing
-  setAdminApprovedToggle: (approved: boolean) => void;
-  login: (email: string, password: string, role: "student" | "mentor") => Promise<UserProfile>;
-  loginWithProvider: (provider: "google", role: "student" | "mentor") => Promise<UserProfile>;
+  login: (email: string, password: string) => Promise<UserProfile>;
   registerStudent: (params: RegisterStudentParams) => Promise<UserProfile>;
   registerMentor: (params: RegisterMentorParams) => Promise<{ user: UserProfile; needsApproval: boolean }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (data: Partial<UserProfile>) => void;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = "qbitx_auth_user";
-const ADMIN_TOGGLE_KEY = "qbitx_admin_approved_toggle";
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [adminApprovedToggle, setAdminApprovedToggleState] = useState<boolean>(true);
+  const { data: sessionData, isPending } = useSession();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    // Load stored session & demo admin toggle state
-    try {
-      const storedUser = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-      const storedToggle = localStorage.getItem(ADMIN_TOGGLE_KEY);
-      if (storedToggle !== null) {
-        setAdminApprovedToggleState(storedToggle === "true");
-      }
-    } catch (e) {
-      console.error("Failed to parse auth storage:", e);
-    } finally {
-      setIsLoading(false);
+    if (sessionData?.user) {
+      const u = sessionData.user as any;
+      setProfile({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role || "student",
+        status: u.status || "active",
+        image: u.image,
+        avatarUrl: u.image,
+        isVerified: !!u.emailVerified,
+        isApproved: u.role === "mentor" ? false : true,
+      });
+    } else if (!isPending) {
+      setProfile(null);
     }
+  }, [sessionData, isPending]);
 
-    // Subscribe to Supabase Auth State Changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const metadata = session.user.user_metadata || {};
-        const profile: UserProfile = {
-          id: session.user.id,
-          email: session.user.email || "",
-          name: metadata.full_name || metadata.name || session.user.email?.split("@")[0] || "User",
-          role: metadata.role || "student",
-          avatarUrl: metadata.avatar_url || metadata.picture,
-          university: metadata.university || "Tech University",
-          department: metadata.department || "Computer Science",
-          studentId: metadata.studentId || `CS-${session.user.id.slice(-4)}`,
-          experienceLevel: metadata.experienceLevel || "Intermediate",
-          track: metadata.track || "Web Development",
-          isVerified: !!session.user.email_confirmed_at,
-          onboardingCompleted: true,
-        };
-        setUser(profile);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(profile));
-      }
+  const login = async (email: string, password: string): Promise<UserProfile> => {
+    const res = await signIn.email({
+      email,
+      password,
     });
 
-    return () => {
-      authListener?.subscription.unsubscribe();
+    if (res.error) {
+      throw new Error(res.error.message || "Invalid credentials. Please verify your email and password.");
+    }
+
+    const u = res.data?.user as any;
+    const userProfile: UserProfile = {
+      id: u?.id || "",
+      email: u?.email || email,
+      name: u?.name || "",
+      role: u?.role || "student",
+      status: u?.status || "active",
+      image: u?.image,
+      avatarUrl: u?.image,
+      isVerified: !!u?.emailVerified,
+      isApproved: true,
     };
-  }, []);
-
-  const saveUserSession = (u: UserProfile | null) => {
-    setUser(u);
-    if (u) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(u));
-    } else {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-    }
+    setProfile(userProfile);
+    return userProfile;
   };
 
-  const setAdminApprovedToggle = (approved: boolean) => {
-    setAdminApprovedToggleState(approved);
-    localStorage.setItem(ADMIN_TOGGLE_KEY, approved ? "true" : "false");
-    if (user && user.role === "mentor") {
-      const updated = { ...user, isApproved: approved };
-      saveUserSession(updated);
-    }
-  };
+  const registerStudent = async (params: RegisterStudentParams): Promise<UserProfile> => {
+    const fullName = `${params.firstName} ${params.lastName}`.trim();
+    const res = await signUp.email({
+      email: params.email,
+      password: params.password,
+      name: fullName,
+    });
 
-  const login = async (email: string, password: string, role: "student" | "mentor") => {
-    const loggedInUser = await AuthService.login(email, password, role);
-    
-    if (role === "mentor") {
-      loggedInUser.isApproved = adminApprovedToggle;
-      if (!adminApprovedToggle) {
-        throw new Error("Your mentor application is pending admin review.");
-      }
+    if (res.error) {
+      throw new Error(res.error.message || "Registration failed. Please check your information.");
     }
 
-    saveUserSession(loggedInUser);
-    return loggedInUser;
-  };
-
-  const loginWithProvider = async (provider: "google", role: "student" | "mentor") => {
-    const socialUser = await AuthService.loginWithProvider(provider, role);
-    saveUserSession(socialUser);
-    return socialUser;
-  };
-
-  const registerStudent = async (params: RegisterStudentParams) => {
-    const newStudent = await AuthService.registerStudent(params);
-    saveUserSession(newStudent);
-    return newStudent;
-  };
-
-  const registerMentor = async (params: RegisterMentorParams) => {
-    const res = await AuthService.registerMentor(params);
-    if (adminApprovedToggle) {
-      res.user.isApproved = true;
-      saveUserSession(res.user);
+    // Call student onboarding/profile initialization
+    try {
+      await fetch("/api/student/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          university: params.university || "",
+          department: params.department || "",
+          studentId: params.studentId || "",
+          academicYear: params.academicYear || "",
+          experienceLevel: params.experience || "beginner",
+          track: params.track || "Web & AI Engineering",
+        }),
+      });
+    } catch (e) {
+      // Non-blocking for signup
     }
-    return res;
+
+    const u = res.data?.user as any;
+    const userProfile: UserProfile = {
+      id: u?.id || "",
+      email: params.email,
+      name: fullName,
+      role: "student",
+      isVerified: false,
+      university: params.university,
+      department: params.department,
+      track: params.track,
+    };
+    setProfile(userProfile);
+    return userProfile;
+  };
+
+  const registerMentor = async (params: RegisterMentorParams): Promise<{ user: UserProfile; needsApproval: boolean }> => {
+    const res = await signUp.email({
+      email: params.email,
+      password: params.password || "MentorTempPass123!",
+      name: params.fullName,
+    });
+
+    if (res.error) {
+      throw new Error(res.error.message || "Mentor application submission failed.");
+    }
+
+    const u = res.data?.user as any;
+    const userProfile: UserProfile = {
+      id: u?.id || "",
+      email: params.email,
+      name: params.fullName,
+      role: "mentor",
+      isVerified: false,
+      isApproved: false,
+    };
+    return { user: userProfile, needsApproval: true };
   };
 
   const logout = async () => {
-    await AuthService.logout();
-    saveUserSession(null);
+    await signOut();
+    setProfile(null);
+    router.push("/login");
   };
 
   const updateUser = (data: Partial<UserProfile>) => {
-    if (user) {
-      const updated = { ...user, ...data };
-      saveUserSession(updated);
+    if (profile) {
+      setProfile({ ...profile, ...data });
     }
+  };
+
+  const refreshSession = async () => {
+    // Better auth refresh
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isLoading,
-        adminApprovedToggle,
-        setAdminApprovedToggle,
+        user: profile,
+        isLoading: isPending,
         login,
-        loginWithProvider,
         registerStudent,
         registerMentor,
         logout,
         updateUser,
+        refreshSession,
       }}
     >
       {children}

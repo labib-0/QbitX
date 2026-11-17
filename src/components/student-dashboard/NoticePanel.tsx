@@ -21,7 +21,20 @@ export function NoticePanel() {
     fetch("/api/student/dashboard")
       .then((r) => r.json())
       .then((json) => {
-        if (json.success) setAnnouncements(json.data.announcements);
+        if (json.success && json.data?.announcements) {
+          setAnnouncements(json.data.announcements);
+        } else {
+          setAnnouncements([
+            {
+              id: "ann-welcome",
+              title: "Welcome to QbitX Rebuild!",
+              body: "Explore the new Full-Stack Web & AI Engineering courses and build hands-on capstone projects.",
+              category: "general",
+              date: "Today",
+              urgent: false,
+            },
+          ]);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));

@@ -37,7 +37,8 @@ export default function MentorRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
 
-  const { registerMentor, adminApprovedToggle } = useAuth();
+  const { registerMentor } = useAuth();
+  const [isApproved, setIsApproved] = useState(false);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -79,7 +80,7 @@ export default function MentorRegisterPage() {
 
   const handleModalConfirm = () => {
     setShowUnderReviewModal(false);
-    if (adminApprovedToggle) {
+    if (isApproved) {
       router.push("/dashboard/mentor");
     } else {
       router.push("/login/mentor");
@@ -332,13 +333,13 @@ export default function MentorRegisterPage() {
       {/* Under Review Modal */}
       <SuccessModal
         isOpen={showUnderReviewModal}
-        title={adminApprovedToggle ? "Mentor Application Approved!" : "Your Application is Under Review"}
+        title={isApproved ? "Mentor Application Approved!" : "Your Application is Under Review"}
         message={
-          adminApprovedToggle
+          isApproved
             ? "Congratulations! Your mentor application was approved. You can now access the Senior Mentor Portal."
             : "Thank you for applying to QbitX! Your mentor application has been submitted and is currently under review by our Admin Team. You cannot log in until approved."
         }
-        buttonText={adminApprovedToggle ? "Enter Mentor Dashboard" : "Go to Mentor Login"}
+        buttonText={isApproved ? "Enter Mentor Dashboard" : "Go to Mentor Login"}
         onConfirm={handleModalConfirm}
       />
     </AuthLayout>

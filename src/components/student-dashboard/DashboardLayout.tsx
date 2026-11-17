@@ -18,6 +18,7 @@ import { ProfileWidget } from "./ProfileWidget";
 import { SettingsWidget } from "./SettingsWidget";
 import { HelpDeskModal } from "./HelpDeskModal";
 import { AchievementsWidget } from "./AchievementsWidget";
+import { ProjectsWidget } from "./ProjectsWidget";
 
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
@@ -120,6 +121,7 @@ export function StudentDashboardLayout() {
           )}
 
           {activeTab === "Learning Families" && <LearningFamilyWidget />}
+          {activeTab === "Projects" && <ProjectsWidget />}
           {activeTab === "Assignments" && <AssignmentsWidget />}
           {activeTab === "Certificates" && <CertificatesWidget />}
           {activeTab === "Settings" && <SettingsWidget />}

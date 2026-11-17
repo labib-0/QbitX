@@ -13,7 +13,8 @@ import {
   PanelLeftOpen,
   Sparkles,
   Headphones,
-  Trophy
+  Trophy,
+  FolderGit2
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/navigation";
@@ -45,6 +46,7 @@ export function LeftSidebar({
   const navItems = [
     { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
     { name: "My Learning", label: "My Courses", icon: BookOpen },
+    { name: "Projects", label: "Capstone Projects", icon: FolderGit2 },
     { name: "AI Mentor Support", label: "AI Mentor Support", icon: Sparkles, onClick: onOpenAIAssistant },
     { name: "Help Desk", label: "Help Desk", icon: Headphones, onClick: onOpenHelpDesk },
     { name: "Learning Families", label: "My Team", icon: Users },

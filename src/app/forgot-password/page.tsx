@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
-      await AuthService.sendPasswordResetEmail(email);
+      await AuthService.resetPassword(email);
       setSubmitted(true);
     } catch (err: any) {
       setError(err.message || "Failed to send reset link.");

@@ -33,8 +33,8 @@ export default function MentorLoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password, "mentor");
-      router.push("/dashboard/mentor");
+      await login(email, password);
+      router.push("/mentor/dashboard");
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Try mentor@qbitx.com / password123.");
     } finally {
@@ -48,6 +48,15 @@ export default function MentorLoginPage() {
       subtitle="Access mentee code submissions, review queues, and PASS session schedules."
       role="mentor"
     >
+      <div className="space-y-1">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-purple-600 dark:text-purple-400 font-heading">
+          Welcome Back, Mentor
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Log in to access your review queue and mentee submissions.
+        </p>
+      </div>
+
       <RoleSelector currentRole="mentor" action="login" />
 
       {/* 1-Click Demo Fill Banner */}

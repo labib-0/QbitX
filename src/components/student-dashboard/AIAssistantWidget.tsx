@@ -86,7 +86,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
       try {
         const stored = localStorage.getItem(CHAT_THREADS_STORAGE_KEY);
         if (stored) setThreads(JSON.parse(stored));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
 
@@ -94,7 +94,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
     if (typeof window !== "undefined" && threads.length > 0) {
       try {
         localStorage.setItem(CHAT_THREADS_STORAGE_KEY, JSON.stringify(threads));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [threads]);
 
@@ -195,11 +195,11 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
       prev.map((t) =>
         t.id === activeThread.id
           ? {
-              ...t,
-              messages: t.messages.map((m) =>
-                m.id === msgId ? { ...m, feedback: m.feedback === feedbackType ? undefined : feedbackType } : m
-              ),
-            }
+            ...t,
+            messages: t.messages.map((m) =>
+              m.id === msgId ? { ...m, feedback: m.feedback === feedbackType ? undefined : feedbackType } : m
+            ),
+          }
           : t
       )
     );
@@ -215,7 +215,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
   return (
     <div className={containerClasses}>
-      
+
       {/* AI Header Bar */}
       <div className="p-4 border-b border-border/50 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-purple-500/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -234,8 +234,9 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
           <div>
             <h3 className="font-extrabold text-sm text-foreground flex items-center gap-1.5 font-heading">
               <span>QbitX AI Mentor 24/7</span>
-              <span className="text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full font-extrabold">
-                Interactive Demo
+              <span className="text-[10px] bg-sky-500/20 text-sky-600 dark:text-sky-300 px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Gemini Powered</span>
               </span>
             </h3>
             <p className="text-[11px] text-muted-foreground">Context: <strong>{courseTitle}</strong></p>
@@ -261,7 +262,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
       {/* Main Body: Conversations Sidebar + Chat Canvas */}
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
-        
+
         {/* Conversations Sidebar Drawer */}
         {showSidebar && (
           <aside className="w-64 border-r border-border bg-card p-3 space-y-3 flex flex-col justify-between absolute inset-y-0 left-0 z-30 shadow-2xl animate-in slide-in-from-left duration-200">
@@ -296,11 +297,10 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                         setActiveThreadId(t.id);
                         setShowSidebar(false);
                       }}
-                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between group ${
-                        isActive
-                          ? "bg-sky-500 text-white border-sky-500 font-bold shadow-sm"
-                          : "border-border/50 text-foreground hover:bg-muted/60"
-                      }`}
+                      className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between group ${isActive
+                        ? "bg-sky-500 text-white border-sky-500 font-bold shadow-sm"
+                        : "border-border/50 text-foreground hover:bg-muted/60"
+                        }`}
                     >
                       <span className="truncate pr-2">{t.title}</span>
                       {threads.length > 1 && (
@@ -321,7 +321,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
 
         {/* Chat Canvas */}
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
-          
+
           {/* Suggested Prompts Bar */}
           <div className="px-4 py-2 bg-muted/30 border-b border-border/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
             <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">Suggested:</span>
@@ -344,19 +344,17 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                 className={`flex items-start gap-3 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
               >
                 <div
-                  className={`h-8 w-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${
-                    msg.sender === "user" ? "bg-sky-500 text-white" : "bg-purple-600 text-white"
-                  }`}
+                  className={`h-8 w-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${msg.sender === "user" ? "bg-sky-500 text-white" : "bg-purple-600 text-white"
+                    }`}
                 >
                   {msg.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
 
                 <div
-                  className={`max-w-[85%] rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
-                    msg.sender === "user"
-                      ? "bg-sky-500 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
-                      : "bg-card text-foreground rounded-tl-none border border-border shadow-sm"
-                  }`}
+                  className={`max-w-[85%] rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${msg.sender === "user"
+                    ? "bg-sky-500 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
+                    : "bg-card text-foreground rounded-tl-none border border-border shadow-sm"
+                    }`}
                 >
                   <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
 

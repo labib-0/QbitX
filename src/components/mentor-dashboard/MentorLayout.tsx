@@ -8,14 +8,14 @@ import { MentorSidebar } from "./MentorSidebar";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 
 export function MentorLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, isLoading, adminApprovedToggle } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/login/mentor");
-      } else if (user.role !== "mentor" && (user.role as string) !== "admin") {
+        router.push("/login?callbackUrl=/mentor/dashboard");
+      } else if (user.role !== "mentor" && user.role !== "admin" && user.role !== "super_admin") {
         router.push("/student/dashboard");
       }
     }
@@ -32,27 +32,26 @@ export function MentorLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isApproved = user.isApproved ?? adminApprovedToggle;
+  const isMentorOrAdmin = user.role === "mentor" || user.role === "admin" || user.role === "super_admin";
 
-  if (!isApproved && (user.role as string) !== "admin") {
+  if (!isMentorOrAdmin) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center space-y-4 font-sans">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500 border border-red-500/20">
           <AlertTriangle className="h-8 w-8" />
         </div>
-        <h2 className="text-2xl font-extrabold text-foreground font-heading">Senior Mentor Application Under Review</h2>
+        <h2 className="text-2xl font-extrabold text-foreground font-heading">
+          Mentor Authorization Required
+        </h2>
         <p className="text-xs text-muted-foreground max-w-md leading-relaxed">
-          Your senior mentor profile is currently being reviewed by the QbitX Admin team. Mentors cannot access operational modules until approved.
+          Your account does not possess Mentor privileges. Please log in with a verified mentor account.
         </p>
-        <div className="p-3 rounded-2xl bg-muted border border-border text-xs text-foreground font-medium">
-          💡 <strong>Demo Tip:</strong> Toggle <em>&quot;Admin Approved State&quot;</em> to Approved in the header banner to test access.
-        </div>
         <button
           onClick={() => {
             logout();
-            router.push("/login/mentor");
+            router.push("/login");
           }}
-          className="px-6 py-2.5 rounded-xl bg-foreground text-background text-xs font-extrabold hover:opacity-90"
+          className="px-6 py-2.5 rounded-xl bg-foreground text-background text-xs font-extrabold hover:opacity-90 font-heading"
         >
           Return to Login
         </button>

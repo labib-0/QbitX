@@ -1,8 +1,6 @@
 /**
  * ProjectService.ts
- * Manages active student project workspaces, team members, sprint progress, and deadlines.
- * 
- * TODO: Replace mock data with Supabase / Firebase / REST API integration.
+ * Manages active student project workspaces, milestones, submissions, and status.
  */
 
 export interface TeamMember {
@@ -26,83 +24,58 @@ export interface Project {
 
 export class ProjectService {
   /**
-   * Fetch active projects
-   * TODO: API integration -> GET /api/student/projects
+   * Fetch active projects from database API
    */
   static async getActiveProjects(): Promise<Project[]> {
-    return [
-      {
-        id: "proj-101",
-        title: "QbitX Realtime AI Code Reviewer",
-        description: "An automated AST & LLM code reviewing pipeline for university student submissions.",
-        status: "In Progress",
-        sprintProgress: 82,
-        nextDeadline: "Friday, 11:59 PM",
-        githubRepoUrl: "https://github.com/qbitx/ai-code-reviewer",
-        techStack: ["Next.js", "TypeScript", "Tailwind", "Python", "FastAPI"],
-        team: [
-          {
-            id: "m-1",
-            name: "Labib (You)",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-            role: "Lead Frontend Engineer",
-          },
-          {
-            id: "m-2",
-            name: "Tariq Hasan",
-            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
-            role: "Backend Architect",
-          },
-          {
-            id: "m-3",
-            name: "Ayesha Malik",
-            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150",
-            role: "AI Model Specialist",
-          },
-        ],
-      },
-      {
-        id: "proj-102",
-        title: "Distributed KV Caching Engine",
-        description: "A high-performance in-memory key-value store with Raft consensus protocol.",
-        status: "In Progress",
-        sprintProgress: 60,
-        nextDeadline: "Aug 5, 2026",
-        githubRepoUrl: "https://github.com/qbitx/raft-kv-store",
-        techStack: ["Go", "gRPC", "Docker", "Raft Protocol"],
-        team: [
-          {
-            id: "m-1",
-            name: "Labib (You)",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-            role: "Systems Dev",
-          },
-          {
-            id: "m-4",
-            name: "David Kim",
-            avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
-            role: "DevOps Engineer",
-          },
-        ],
-      },
-      {
-        id: "proj-103",
-        title: "PASS Session Scheduler Web App",
-        description: "Intelligent slot matching algorithm for senior mentors and student study guilds.",
-        status: "Completed",
-        sprintProgress: 100,
-        nextDeadline: "Completed",
-        githubRepoUrl: "https://github.com/qbitx/pass-scheduler",
-        techStack: ["React", "PostgreSQL", "Node.js"],
-        team: [
-          {
-            id: "m-1",
-            name: "Labib (You)",
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-            role: "Full-Stack Dev",
-          },
-        ],
-      },
-    ];
+    try {
+      const res = await fetch("/api/projects");
+      if (!res.ok) {
+        throw new Error("Failed to fetch projects");
+      }
+      const json = await res.json();
+      if (!json.success || !Array.isArray(json.data)) {
+        return [];
+      }
+
+      return json.data.map((p: any) => {
+        let status: "In Progress" | "Review Pending" | "Completed" = "In Progress";
+        let progress = 20;
+
+        if (p.enrollment?.status === "completed") {
+          status = "Completed";
+          progress = 100;
+        } else if (p.enrollment?.status === "submitted") {
+          status = "Review Pending";
+          progress = 85;
+        } else if (p.enrollment?.currentMilestone) {
+          progress = Math.min(
+            80,
+            Math.round((p.enrollment.currentMilestone / Math.max(1, p.milestonesCount)) * 100)
+          );
+        }
+
+        return {
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          status,
+          sprintProgress: progress,
+          nextDeadline: status === "Completed" ? "Completed" : "Next Milestone Due Soon",
+          githubRepoUrl: p.starterRepoUrl || "https://github.com/qbitx",
+          techStack: p.technologies || [],
+          team: [
+            {
+              id: "student-self",
+              name: "Student (You)",
+              avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+              role: "Lead Engineer",
+            },
+          ],
+        };
+      });
+    } catch (error) {
+      console.error("ProjectService.getActiveProjects error:", error);
+      return [];
+    }
   }
 }

@@ -22,8 +22,10 @@ export default function StudentLoginPage() {
 
   useEffect(() => {
     if (user) {
-      if (user.role === "mentor") {
-        router.push("/dashboard/mentor");
+      if (user.role === "admin" || user.role === "super_admin") {
+        router.push("/admin/dashboard");
+      } else if (user.role === "mentor") {
+        router.push("/mentor/dashboard");
       } else {
         router.push("/student/dashboard");
       }
@@ -36,8 +38,14 @@ export default function StudentLoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password, "student");
-      router.push("/student/dashboard");
+      const loggedInUser = await login(email, password);
+      if (loggedInUser.role === "admin" || loggedInUser.role === "super_admin") {
+        router.push("/admin/dashboard");
+      } else if (loggedInUser.role === "mentor") {
+        router.push("/mentor/dashboard");
+      } else {
+        router.push("/student/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "No registered account found with this email. Please register first!");
     } finally {

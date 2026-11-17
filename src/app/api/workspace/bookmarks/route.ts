@@ -1,27 +1,41 @@
-// GET  /api/workspace/bookmarks -> Fetch bookmarks
-// POST /api/workspace/bookmarks -> Add bookmark
-
 import { NextRequest, NextResponse } from "next/server";
+import { requireUser } from "@/server/auth/session";
 import { WorkspaceService } from "@/services/workspace/WorkspaceService";
 
 export async function GET(request: NextRequest) {
   try {
+    const context = await requireUser();
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") || "usr-student-demo";
     const lessonId = searchParams.get("lessonId") || undefined;
 
-    const bookmarks = WorkspaceService.getBookmarks(userId, lessonId);
+    // Securely bind to authenticated user session
+    const bookmarks = WorkspaceService.getBookmarks(context.user.id, lessonId);
     return NextResponse.json({ success: true, count: bookmarks.length, data: bookmarks });
   } catch (error: any) {
+    if (error.name === "UnauthorizedError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
+    if (error.name === "ForbiddenError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const context = await requireUser();
     const body = await request.json();
+
+    if (!body.title) {
+      return NextResponse.json(
+        { success: false, error: "Bookmark title is required" },
+        { status: 400 }
+      );
+    }
+
     const created = WorkspaceService.addBookmark({
-      userId: body.userId || "usr-student-demo",
+      userId: context.user.id, // Strictly bind to session user
       courseId: body.courseId || "crs-1",
       lessonId: body.lessonId || "les-1",
       title: body.title,
@@ -31,6 +45,12 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ success: true, data: created });
   } catch (error: any) {
+    if (error.name === "UnauthorizedError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
+    if (error.name === "ForbiddenError") {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }

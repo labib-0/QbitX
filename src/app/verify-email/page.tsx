@@ -1,113 +1,117 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { Mail, CheckCircle2, RefreshCw, ArrowRight, Clock, Sparkles } from "lucide-react";
-import { EmailVerificationService } from "@/services/emailVerificationService";
+import { Mail, CheckCircle2, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
-export default function VerifyEmailPage() {
-  const [timer, setTimer] = useState<number>(60);
-  const [canResend, setCanResend] = useState<boolean>(false);
-  const [isResending, setIsResending] = useState<boolean>(false);
+function VerifyEmailContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
+  const emailParam = searchParams.get("email") || "";
+
+  const [isVerifying, setIsVerifying] = useState<boolean>(!!token);
   const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [resendStatus, setResendStatus] = useState<string>("");
+  const [isResending, setIsResending] = useState<boolean>(false);
 
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const activeEmail = emailParam || session?.user?.email || "your registered email";
 
   useEffect(() => {
-    let interval: any = null;
-    if (timer > 0 && !isVerified) {
-      interval = setInterval(() => {
-        setTimer((t) => t - 1);
-      }, 1000);
-    } else {
-      setCanResend(true);
+    if (!token) return;
+
+    let isMounted = true;
+    async function verify() {
+      setIsVerifying(true);
+      setError("");
+      try {
+        const res = await authClient.verifyEmail({
+          query: { token },
+        });
+
+        if (!isMounted) return;
+
+        if (res.error) {
+          setError(res.error.message || "Email verification token is invalid or expired.");
+        } else {
+          setIsVerified(true);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setError(err.message || "Failed to verify email token. Please try again.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsVerifying(false);
+        }
+      }
     }
-    return () => clearInterval(interval);
-  }, [timer, isVerified]);
+
+    verify();
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
 
   const handleResend = async () => {
-    if (!canResend) return;
+    if (!activeEmail || activeEmail === "your registered email") {
+      setError("Please log in or supply your email to request a new verification link.");
+      return;
+    }
+
     setIsResending(true);
+    setResendStatus("");
+    setError("");
+
     try {
-      await EmailVerificationService.resendVerificationEmail("student@qbitx.com");
-      setTimer(60);
-      setCanResend(false);
+      const res = await authClient.sendVerificationEmail({
+        email: activeEmail,
+        callbackURL: "/verify-email",
+      });
+
+      if (res.error) {
+        setError(res.error.message || "Failed to send verification link.");
+      } else {
+        setResendStatus("A new verification link has been dispatched to your email address.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Error requesting verification email.");
     } finally {
       setIsResending(false);
     }
   };
 
-  const handleSimulateVerification = () => {
-    setIsVerified(true);
-  };
-
   return (
     <AuthLayout
       title="Verify Your Email Address"
-      subtitle="We sent a verification link to student@qbitx.com. Please confirm your email to activate full platform features."
+      subtitle={`We sent a verification link to ${activeEmail}. Please confirm your email to activate full platform features.`}
       role="student"
       showDemoAdminBanner={false}
     >
-      {!isVerified ? (
-        <div className="text-center py-6 space-y-6">
+      {isVerifying ? (
+        <div className="text-center py-8 space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-500/10 text-sky-500 border border-sky-500/20">
-            <Mail className="h-8 w-8 animate-bounce" />
+            <RefreshCw className="h-8 w-8 animate-spin" />
           </div>
-
-          <div className="space-y-2">
-            <h3 className="font-bold text-slate-900 dark:text-white text-xl">Check Your Email Inbox</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
-              Click the verification link inside the email we sent to <strong className="text-sky-600 dark:text-sky-400">student@qbitx.com</strong>.
-            </p>
-          </div>
-
-          {/* Countdown & Resend */}
-          <div className="pt-2 flex flex-col items-center gap-3">
-            {!canResend ? (
-              <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                <Clock className="h-4 w-4 text-sky-500" />
-                <span>Resend link available in <strong className="text-sky-600 dark:text-sky-400 font-mono">{timer}s</strong></span>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={isResending}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 px-5 py-2.5 text-sm font-bold text-sky-600 dark:text-sky-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-              >
-                {isResending ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4" /> Resend Verification Email
-                  </>
-                )}
-              </button>
-            )}
-
-            {/* Demo Trigger Button */}
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 w-full">
-              <button
-                type="button"
-                onClick={handleSimulateVerification}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.01] transition-transform"
-              >
-                <Sparkles className="h-4 w-4" /> Demo: Simulate Email Verification Success
-              </button>
-            </div>
-          </div>
+          <h3 className="font-bold text-slate-900 dark:text-white text-xl">Verifying Token...</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Please wait while we validate your email verification link against the database.
+          </p>
         </div>
-      ) : (
+      ) : isVerified ? (
         <div className="text-center py-6 space-y-4 animate-in fade-in duration-300">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
             <CheckCircle2 className="h-10 w-10" />
           </div>
 
           <h3 className="font-extrabold text-slate-900 dark:text-white text-2xl">Verification Success!</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Your email address has been verified. You can now complete your onboarding profile.
+            Your email address has been verified in the database. You can now proceed to your student onboarding.
           </p>
 
           <button
@@ -118,6 +122,48 @@ export default function VerifyEmailPage() {
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
+      ) : (
+        <div className="text-center py-6 space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-500/10 text-sky-500 border border-sky-500/20">
+            <Mail className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-bold text-slate-900 dark:text-white text-xl">Check Your Email Inbox</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto">
+              Click the link inside the verification email to verify your account. If you did not receive the email, you can request a new one below.
+            </p>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-200 dark:border-red-900/50 text-left">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {resendStatus && (
+            <div className="p-3 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/50 text-left">
+              {resendStatus}
+            </div>
+          )}
+
+          <div className="pt-2 space-y-3">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+            >
+              {isResending ? (
+                <RefreshCw className="h-4 w-4 animate-spin text-sky-500" />
+              ) : (
+                <RefreshCw className="h-4 w-4 text-sky-500" />
+              )}
+              <span>Resend Verification Email</span>
+            </button>
+          </div>
+        </div>
       )}
 
       <p className="text-center text-sm text-slate-600 dark:text-slate-400 pt-2 font-medium">
@@ -127,5 +173,13 @@ export default function VerifyEmailPage() {
         </Link>
       </p>
     </AuthLayout>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-12 text-sm text-slate-500">Loading verification...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

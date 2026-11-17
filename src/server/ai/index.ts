@@ -81,9 +81,13 @@ export async function getGeminiModelCandidates(): Promise<string[]> {
 
   return Array.from(
     new Set(
-      [process.env.GEMINI_MODEL, ...discovered, ...DEFAULT_GEMINI_MODELS].filter(
-        (model): model is string => Boolean(model)
-      )
+      [
+        process.env.GEMINI_MODEL,
+        "gemini-flash-latest",
+        "gemini-flash-lite-latest",
+        ...discovered,
+        ...DEFAULT_GEMINI_MODELS,
+      ].filter((model): model is string => Boolean(model))
     )
   );
 }
@@ -152,7 +156,7 @@ async function callGeminiGenerate({
         })),
         generationConfig: { temperature },
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(18000),
     }
   );
 
@@ -231,7 +235,7 @@ export async function generateAIResponse({
   let lastError: any = null;
   const attempts: { model: string; status?: number; message?: string }[] = [];
 
-  for (const modelName of (await getGeminiModelCandidates()).slice(0, 4)) {
+  for (const modelName of (await getGeminiModelCandidates()).slice(0, 3)) {
     try {
       const resultText = await callGeminiGenerate({
         model: modelName,

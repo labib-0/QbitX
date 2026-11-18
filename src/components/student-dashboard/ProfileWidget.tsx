@@ -41,18 +41,18 @@ export function ProfileWidget() {
           const p = json.data?.profile || {};
 
           setProfile({
-            name: u?.name || "",
-            email: u?.email || "",
-            university: p.university || "",
-            department: p.department || "",
-            academicYear: p.academicYear || "1st Year",
-            bio: p.bio || "",
-            github: p.githubUrl || "",
-            linkedin: p.linkedinUrl || "",
-            portfolio: p.portfolioUrl || "",
-            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || ""),
-            xp: p.xp || 0,
-            level: p.level || 1,
+            name: u?.name || "Tanvir Ahmed",
+            email: u?.email || "student@qbitx.com",
+            university: p.university || "Bangladesh University of Engineering and Technology (BUET)",
+            department: p.department || "Computer Science & Engineering",
+            academicYear: p.academicYear || "2nd Year",
+            bio: p.bio || "2nd-year CSE student at BUET passionate about Next.js, AI system architectures, and algorithmic problem solving.",
+            github: p.githubUrl || "https://github.com/tanvir-ahmed-buet",
+            linkedin: p.linkedinUrl || "https://linkedin.com/in/tanvir-ahmed-cse",
+            portfolio: p.portfolioUrl || "https://tanvir-buet.dev",
+            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || "TypeScript, Next.js, Python, PostgreSQL, C++"),
+            xp: p.xp || 4850,
+            level: p.level || 12,
           });
         }
       } catch (err: any) {

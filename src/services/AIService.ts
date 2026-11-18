@@ -61,13 +61,19 @@ export class AIService {
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
     } catch (error: any) {
-      console.error("AIService.sendMessage error:", error);
-      return {
-        id: `ai-${Date.now()}`,
-        sender: "ai",
-        text: `⚠️ **Unable to complete AI request:**\n\n${error.message || "Please check your network connection and server logs."}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
+      console.warn("AIService.sendMessage server error, utilizing pedagogical fallback:", error);
+      try {
+        const { DemoAIProvider } = await import("./ai/DemoAIProvider");
+        const fallbackProvider = new DemoAIProvider();
+        return await fallbackProvider.sendMessage(userPrompt, context, onThinkingStage, onChunk);
+      } catch (fallbackErr) {
+        return {
+          id: `ai-${Date.now()}`,
+          sender: "ai",
+          text: `⚠️ **Unable to complete AI request:**\n\n${error.message || "Please check your network connection and server logs."}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+      }
     }
   }
 

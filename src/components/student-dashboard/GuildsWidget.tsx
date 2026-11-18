@@ -10,7 +10,7 @@ export function GuildsWidget() {
     {
       name: "AI & Machine Learning Guild",
       category: "AI Guild",
-      captain: "Prof. Alex Rivera",
+      captain: "Dr. Tariqul Islam (BUET)",
       members: 342,
       weeklyEvents: "Fridays @ 6 PM — LLM Fine-Tuning Workshop",
       icon: Sparkles,
@@ -19,7 +19,7 @@ export function GuildsWidget() {
     {
       name: "Full-Stack Web Engineering Guild",
       category: "Web Guild",
-      captain: "Tariq Hasan",
+      captain: "Eng. Mahbubur Rahman (Brain Station 23)",
       members: 512,
       weeklyEvents: "Wednesdays @ 7 PM — Next.js & Server Components",
       icon: Globe,
@@ -28,7 +28,7 @@ export function GuildsWidget() {
     {
       name: "Cybersecurity & Systems Guild",
       category: "Cyber Guild",
-      captain: "David Kim",
+      captain: "Tanvir Hasan (IUT)",
       members: 218,
       weeklyEvents: "Saturdays @ 4 PM — CTF Hackathon Practice",
       icon: ShieldCheck,
@@ -37,7 +37,7 @@ export function GuildsWidget() {
     {
       name: "IoT & Embedded Systems Guild",
       category: "IoT Guild",
-      captain: "Elena Rostova",
+      captain: "Eng. Ariful Haque (DU)",
       members: 185,
       weeklyEvents: "Tuesdays @ 5 PM — ESP32 & Robotics Lab",
       icon: Cpu,
@@ -46,7 +46,7 @@ export function GuildsWidget() {
     {
       name: "Competitive Programming Guild",
       category: "CP Guild",
-      captain: "Ayesha Malik",
+      captain: "Ayesha Siddiqua (BUET)",
       members: 410,
       weeklyEvents: "Mondays @ 8 PM — LeetCode Hard & Codeforces",
       icon: Code2,
@@ -55,9 +55,9 @@ export function GuildsWidget() {
     {
       name: "AI & CS Academic Research Guild",
       category: "Research Guild",
-      captain: "Dr. Sarah Chen",
+      captain: "Dr. Shamsul Arefin (CUET)",
       members: 160,
-      weeklyEvents: "Thursdays @ 3 PM — Paper Reading & NeurIPS Reviews",
+      weeklyEvents: "Thursdays @ 3 PM — Bengali NLP & Paper Reviews",
       icon: FileSearch,
       color: "from-cyan-600 to-blue-700",
     },

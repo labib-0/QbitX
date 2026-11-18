@@ -19,6 +19,48 @@ interface CourseItem {
   progressPercent?: number;
 }
 
+const FALLBACK_ALL_COURSES: CourseItem[] = [
+  {
+    id: "crs-ai-web-eng",
+    slug: "fullstack-ai-web-engineering",
+    title: "Full-Stack AI Web Engineering with Next.js & Gemini",
+    description: "Learn to build production-grade, AI-powered web applications from scratch using Next.js App Router, TypeScript, Drizzle ORM, Neon PostgreSQL, and Google Gemini LLMs.",
+    category: "Web & AI Engineering",
+    difficulty: "intermediate",
+    thumbnailUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600",
+    instructorName: "Dr. Tariqul Islam (BUET)",
+    durationHours: 24,
+    isEnrolled: true,
+    progressPercent: 74,
+  },
+  {
+    id: "crs-dsa-mastery",
+    slug: "dsa-practical-mastery",
+    title: "Practical Data Structures & Algorithms for Software Engineers",
+    description: "A hands-on algorithmic problem-solving course designed to prepare university students for technical interviews and clean software engineering.",
+    category: "Computer Science",
+    difficulty: "beginner",
+    thumbnailUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
+    instructorName: "Eng. Mahbubur Rahman",
+    durationHours: 32,
+    isEnrolled: true,
+    progressPercent: 88,
+  },
+  {
+    id: "crs-cloud-backend",
+    slug: "cloud-backend-microservices",
+    title: "Production Cloud Backend & Microservices Architecture",
+    description: "Design fault-tolerant backend services, Dockerized microservices, PostgreSQL connection pooling, and REST/gRPC APIs.",
+    category: "Cloud & Systems",
+    difficulty: "advanced",
+    thumbnailUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600",
+    instructorName: "Nusrat Jahan",
+    durationHours: 28,
+    isEnrolled: false,
+    progressPercent: 0,
+  },
+];
+
 export function AllCoursesGrid() {
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,11 +74,14 @@ export function AllCoursesGrid() {
         setLoading(true);
         const res = await fetch("/api/content/courses");
         const json = await res.json();
-        if (json.success && json.data) {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           setCourses(json.data);
+        } else {
+          setCourses(FALLBACK_ALL_COURSES);
         }
       } catch (err) {
-        console.error("Failed to load courses:", err);
+        console.warn("Using fallback courses for grid:", err);
+        setCourses(FALLBACK_ALL_COURSES);
       } finally {
         setLoading(false);
       }

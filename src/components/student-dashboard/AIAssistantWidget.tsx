@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/context/authContext";
 import { AIService, AIMessage } from "@/services/AIService";
 import { ConversationThread } from "@/services/ai/IAIProvider";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 import {
   Bot,
   Send,
@@ -440,14 +441,18 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                 <div
                   className={`max-w-[85%] rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
                     msg.sender === "user"
-                      ? "bg-sky-500 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
-                      : "bg-card text-foreground rounded-tl-none border border-border shadow-sm"
+                      ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-tr-none font-medium shadow-md shadow-sky-500/20"
+                      : "bg-card text-foreground rounded-tl-none border border-border/80 shadow-sm"
                   }`}
                 >
-                  <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+                  {msg.sender === "user" ? (
+                    <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+                  ) : (
+                    <MarkdownRenderer content={msg.text} />
+                  )}
 
                   {/* Formatted Code Block */}
-                  {msg.codeSnippet && (
+                  {msg.codeSnippet && !msg.text.includes("```") && (
                     <div className="rounded-xl bg-slate-950 text-slate-100 p-3 font-mono text-[11px] overflow-x-auto border border-slate-800 space-y-1 mt-2">
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pb-1 border-b border-slate-800">
                         <span className="flex items-center gap-1 font-sans">
@@ -512,10 +517,7 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
                   <Bot className="h-4 w-4" />
                 </div>
                 <div className="max-w-[85%] rounded-2xl rounded-tl-none p-4 bg-card text-foreground border border-sky-500/40 text-xs leading-relaxed shadow-sm">
-                  <p className="whitespace-pre-line leading-relaxed">
-                    {streamingText}
-                    <span className="inline-block w-1.5 h-3 bg-sky-500 ml-1 animate-pulse" />
-                  </p>
+                  <MarkdownRenderer content={streamingText} isStreaming />
                 </div>
               </div>
             )}

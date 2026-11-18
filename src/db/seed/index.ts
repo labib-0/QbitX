@@ -74,17 +74,17 @@ export async function runSeed() {
     adminId = existingAdmin[0].id;
   }
 
-  // Seed Mentor Sarah Chen with Credential Auth
-  const mentorEmail = "sarah.chen@qbitx.com";
+  // Seed Mentor Dr. Tariqul Islam with Credential Auth
+  const mentorEmail = "mentor@qbitx.com";
   const existingMentor = await db.select().from(schema.users).where(eq(schema.users.email, mentorEmail));
-  let mentor1Id = "usr-mentor-sarah";
+  let mentor1Id = "usr-mentor-tariqul";
   if (existingMentor.length === 0) {
     try {
       const res = await auth.api.signUpEmail({
         body: {
           email: mentorEmail,
           password: "MentorPassword123!",
-          name: "Dr. Sarah Chen",
+          name: "Dr. Tariqul Islam",
         },
       });
       mentor1Id = res.user.id;
@@ -95,29 +95,30 @@ export async function runSeed() {
     } catch {
       await db.insert(schema.users).values({
         id: mentor1Id,
-        name: "Dr. Sarah Chen",
+        name: "Dr. Tariqul Islam",
         email: mentorEmail,
         emailVerified: true,
         role: "mentor",
         status: "active",
-        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
       });
     }
   } else {
     mentor1Id = existingMentor[0].id;
+    await db.update(schema.users).set({ name: "Dr. Tariqul Islam" }).where(eq(schema.users.id, mentor1Id));
   }
 
-  // Seed Test Student with Credential Auth
+  // Seed Test Student Tanvir Ahmed with Credential Auth
   const studentEmail = "student@qbitx.com";
   const existingStudent = await db.select().from(schema.users).where(eq(schema.users.email, studentEmail));
-  let student1Id = "usr-student-alex";
+  let student1Id = "usr-student-tanvir";
   if (existingStudent.length === 0) {
     try {
       const res = await auth.api.signUpEmail({
         body: {
           email: studentEmail,
           password: "StudentPassword123!",
-          name: "Alex Rivera",
+          name: "Tanvir Ahmed",
         },
       });
       student1Id = res.user.id;
@@ -128,7 +129,7 @@ export async function runSeed() {
     } catch {
       await db.insert(schema.users).values({
         id: student1Id,
-        name: "Alex Rivera",
+        name: "Tanvir Ahmed",
         email: studentEmail,
         emailVerified: true,
         role: "student",
@@ -137,59 +138,154 @@ export async function runSeed() {
     }
   } else {
     student1Id = existingStudent[0].id;
+    await db.update(schema.users).set({ name: "Tanvir Ahmed" }).where(eq(schema.users.id, student1Id));
   }
 
-  // Seed Mentor Tariq Hasan
+  // Seed Mentor Eng. Mahbubur Rahman
   const mentor2 = {
-    id: "usr-mentor-tariq",
-    name: "Eng. Tariq Hasan",
-    email: "tariq.hasan@qbitx.com",
+    id: "usr-mentor-mahbubur",
+    name: "Eng. Mahbubur Rahman",
+    email: "mahbubur.rahman@qbitx.com",
     emailVerified: true,
-    role: "mentor",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+    role: "mentor" as const,
+    status: "active" as const,
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
   };
-  const exists2 = await db.select().from(schema.users).where(eq(schema.users.id, mentor2.id));
+  const exists2 = await db.select().from(schema.users).where(eq(schema.users.email, mentor2.email));
   if (exists2.length === 0) {
     await db.insert(schema.users).values(mentor2);
+  } else {
+    await db.update(schema.users).set({ name: mentor2.name }).where(eq(schema.users.id, exists2[0].id));
+    mentor2.id = exists2[0].id;
+  }
+
+  // Seed Mentor Nusrat Jahan
+  const mentor3 = {
+    id: "usr-mentor-nusrat",
+    name: "Nusrat Jahan",
+    email: "nusrat.jahan@qbitx.com",
+    emailVerified: true,
+    role: "mentor" as const,
+    status: "active" as const,
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
+  };
+  const exists3 = await db.select().from(schema.users).where(eq(schema.users.email, mentor3.email));
+  if (exists3.length === 0) {
+    await db.insert(schema.users).values(mentor3);
+  } else {
+    mentor3.id = exists3[0].id;
+  }
+
+  // Seed additional Bangladeshi Students
+  const additionalStudents = [
+    {
+      id: "usr-student-anika",
+      name: "Anika Tabassum",
+      email: "anika.tabassum@qbitx.com",
+      emailVerified: true,
+      role: "student" as const,
+      status: "active" as const,
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200",
+    },
+    {
+      id: "usr-student-nafis",
+      name: "Nafis Fuad",
+      email: "nafis.fuad@qbitx.com",
+      emailVerified: true,
+      role: "student" as const,
+      status: "active" as const,
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+    },
+    {
+      id: "usr-student-sumaiya",
+      name: "Sumaiya Rahman",
+      email: "sumaiya.rahman@qbitx.com",
+      emailVerified: true,
+      role: "student" as const,
+      status: "active" as const,
+      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200",
+    },
+  ];
+
+  for (const s of additionalStudents) {
+    const ex = await db.select().from(schema.users).where(eq(schema.users.email, s.email));
+    if (ex.length === 0) {
+      await db.insert(schema.users).values(s);
+    }
   }
 
   // Mentor profiles
   const mProf1 = {
-    id: "mprof-sarah",
+    id: "mprof-tariqul",
     userId: mentor1Id,
-    fullName: "Dr. Sarah Chen",
+    fullName: "Dr. Tariqul Islam",
     expertise: ["Next.js", "TypeScript", "LLM Systems", "React 19"],
     skills: ["Full-Stack Architecture", "Next.js App Router", "Prompt Engineering", "Vector Databases"],
     technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Neon PostgreSQL", "Google Gemini"],
-    yearsOfExperience: 8,
-    bio: "Former Lead AI Architect at Stanford AI Lab, passionate about guiding university engineers into high-impact full-stack development.",
-    companyOrUniversity: "Stanford University / QbitX Faculty",
+    yearsOfExperience: 10,
+    bio: "Associate Professor of Computer Science & Engineering at BUET, Lead AI Architect at QbitX, guiding university engineers in full-stack AI system architectures.",
+    companyOrUniversity: "BUET / QbitX Faculty",
     isApproved: true,
     availabilityStatus: "available",
-    meetingLink: "https://meet.google.com/qbitx-office-hours-sarah",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-tariqul",
   };
 
   const mProf2 = {
-    id: "mprof-tariq",
+    id: "mprof-mahbubur",
     userId: mentor2.id,
-    fullName: "Eng. Tariq Hasan",
-    expertise: ["Algorithms", "Data Structures", "System Design", "Python"],
+    fullName: "Eng. Mahbubur Rahman",
+    expertise: ["Algorithms", "Data Structures", "System Design", "Distributed Systems"],
     skills: ["Algorithm Optimization", "Dynamic Programming", "Graph Theory", "Distributed Systems"],
     technologies: ["Python", "C++", "Docker", "PostgreSQL"],
-    yearsOfExperience: 6,
-    bio: "Senior Distributed Systems Engineer, competitive programming coach, and mentor to over 500 CS undergraduates.",
-    companyOrUniversity: "MIT Tech Alumni / QbitX Systems Guild",
+    yearsOfExperience: 8,
+    bio: "Senior Staff Software Engineer & Systems Architect (ex-Brain Station 23 / Chaldal), competitive programming mentor and coach to over 600 CS undergraduates.",
+    companyOrUniversity: "Brain Station 23 / BUET CSE Alum",
     isApproved: true,
     availabilityStatus: "available",
-    meetingLink: "https://meet.google.com/qbitx-office-hours-tariq",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-mahbubur",
   };
 
-  for (const mp of [mProf1, mProf2]) {
+  const mProf3 = {
+    id: "mprof-nusrat",
+    userId: mentor3.id,
+    fullName: "Nusrat Jahan",
+    expertise: ["Frontend Architecture", "UI/UX Engineering", "Web Performance", "React 19"],
+    skills: ["Design Systems", "Tailwind CSS v4", "State Management", "Micro-frontends"],
+    technologies: ["TypeScript", "Next.js", "Tailwind CSS", "PostgreSQL"],
+    yearsOfExperience: 7,
+    bio: "Senior Frontend Architect & UI/UX Specialist (ex-Pathao, BRAC University Alum), passionate about high-performance web applications and accessibility.",
+    companyOrUniversity: "BRAC University / QbitX Faculty",
+    isApproved: true,
+    availabilityStatus: "available",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-nusrat",
+  };
+
+  for (const mp of [mProf1, mProf2, mProf3]) {
     const exists = await db.select().from(schema.mentorProfiles).where(eq(schema.mentorProfiles.id, mp.id));
     if (exists.length === 0) {
       await db.insert(schema.mentorProfiles).values(mp);
     }
+  }
+
+  // Student Profiles
+  const sProfTanvir = {
+    id: "sprof-tanvir",
+    userId: student1Id,
+    university: "Bangladesh University of Engineering and Technology (BUET)",
+    department: "Computer Science & Engineering",
+    academicYear: "2nd Year",
+    bio: "2nd-year CSE student at BUET passionate about Next.js, AI system architectures, and algorithmic problem solving.",
+    skills: ["TypeScript", "Next.js", "Python", "C++", "PostgreSQL"],
+    githubUrl: "https://github.com/tanvir-ahmed-buet",
+    linkedinUrl: "https://linkedin.com/in/tanvir-ahmed-cse",
+    xp: 4850,
+    level: 12,
+  };
+  const existsSProf = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.userId, student1Id));
+  if (existsSProf.length === 0) {
+    await db.insert(schema.studentProfiles).values(sProfTanvir);
+  } else {
+    await db.update(schema.studentProfiles).set(sProfTanvir).where(eq(schema.studentProfiles.userId, student1Id));
   }
 
   // 3. Seed Realistic Courses
@@ -203,7 +299,7 @@ export async function runSeed() {
     trackId: trackWebAI.id,
     thumbnailUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600",
     instructorId: mentor1Id,
-    instructorName: "Dr. Sarah Chen",
+    instructorName: "Dr. Tariqul Islam",
     durationHours: 24,
     prerequisites: ["Basic JavaScript / TypeScript", "Fundamentals of HTML/CSS", "Git Basics"],
     learningOutcomes: [
@@ -225,7 +321,7 @@ export async function runSeed() {
     trackId: trackCS.id,
     thumbnailUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=600",
     instructorId: mentor2.id,
-    instructorName: "Eng. Tariq Hasan",
+    instructorName: "Eng. Mahbubur Rahman",
     durationHours: 32,
     prerequisites: ["Basic Programming Logic (Loops, Conditionals, Functions)"],
     learningOutcomes: [
@@ -236,10 +332,33 @@ export async function runSeed() {
     isPublished: true,
   };
 
-  for (const c of [course1, course2]) {
+  const course3 = {
+    id: "crs-cloud-backend",
+    slug: "cloud-backend-microservices",
+    title: "Production Cloud Backend & Microservices Architecture",
+    description: "Design fault-tolerant backend services, Dockerized microservices, PostgreSQL connection pooling, and REST/gRPC APIs.",
+    category: "Cloud & Systems",
+    difficulty: "advanced",
+    trackId: trackCS.id,
+    thumbnailUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600",
+    instructorId: mentor3.id,
+    instructorName: "Nusrat Jahan",
+    durationHours: 28,
+    prerequisites: ["Relational Databases", "Node.js / Express or Go basics"],
+    learningOutcomes: [
+      "Architect resilient microservices with event-driven message queues",
+      "Deploy containerized workloads to cloud clusters with automated CI/CD",
+      "Benchmark database throughput and optimize query response times",
+    ],
+    isPublished: true,
+  };
+
+  for (const c of [course1, course2, course3]) {
     const exists = await db.select().from(schema.courses).where(eq(schema.courses.id, c.id));
     if (exists.length === 0) {
       await db.insert(schema.courses).values(c);
+    } else {
+      await db.update(schema.courses).set(c).where(eq(schema.courses.id, c.id));
     }
   }
 
@@ -379,14 +498,88 @@ export async function runSeed() {
     isPublished: true,
   };
 
-  for (const p of [proj1, proj2]) {
+  const proj3 = {
+    id: "proj-bkash-ledger",
+    slug: "bkash-nagad-payment-ledger",
+    title: "bKash/Nagad Real-Time Payment Gateway & Ledger Simulator",
+    description: "High-concurrency digital wallet ledger simulating instant mobile financial services (MFS), idempotent webhook callbacks, and double-entry accounting reconciliation.",
+    difficulty: "intermediate" as const,
+    technologies: ["Next.js", "TypeScript", "Neon PostgreSQL", "ACID Transactions", "Webhooks"],
+    learningObjectives: [
+      "Implement double-entry bookkeeping ledger with transactional row-level locks",
+      "Author idempotent webhook dispatchers with SHA-256 HMAC signature verification",
+      "Build merchant settlement workflows and real-time transaction reconciliation dashboards",
+    ],
+    instructionsMarkdown: `## Capstone Instructions: bKash/Nagad Payment Ledger\n\n### Objective:\nConstruct a fault-tolerant MFS payment simulator handling concurrent debit/credit operations with zero balance drift.`,
+    starterRepoUrl: "https://github.com/qbitx/bkash-ledger-starter",
+    estimatedHours: 30,
+    isPublished: true,
+  };
+
+  const proj4 = {
+    id: "proj-dhaka-traffic",
+    slug: "dhaka-traffic-flow-optimizer",
+    title: "Dhaka Smart Traffic Flow Optimizer & Route Planning Engine",
+    description: "Real-time traffic congestion analysis and shortest-path routing optimization engine modeled on Dhaka's arterial road networks, flyovers, and elevated expressways.",
+    difficulty: "advanced" as const,
+    technologies: ["Python", "FastAPI", "Graph Theory", "A* Search", "Next.js"],
+    learningObjectives: [
+      "Model multi-modal urban transit networks with weighted directed graphs",
+      "Implement Dijkstra and A* pathfinding with real-time bottleneck weights",
+      "Visualize route congestion heatmaps and simulated transit travel times",
+    ],
+    instructionsMarkdown: `## Capstone Instructions: Dhaka Smart Traffic\n\n### Objective:\nOptimize urban traffic routing across Mohakhali, Farmgate, and Mirpur intersections using dynamic graph weights.`,
+    starterRepoUrl: "https://github.com/qbitx/dhaka-traffic-starter",
+    estimatedHours: 40,
+    isPublished: true,
+  };
+
+  const proj5 = {
+    id: "proj-bangla-ocr",
+    slug: "bangla-ocr-document-digitizer",
+    title: "AI-Powered Bangla OCR & Document Digitizer Platform",
+    description: "Computer vision and LLM-powered document intelligence platform for converting scanned Bengali academic textbooks, government circulars, and manuscripts into searchable text.",
+    difficulty: "intermediate" as const,
+    technologies: ["Next.js", "TypeScript", "Google Gemini", "Tesseract", "Tailwind CSS"],
+    learningObjectives: [
+      "Process high-resolution Bengali document scans and apply adaptive thresholding",
+      "Integrate Gemini Vision models for nuanced Bengali grammatical correction",
+      "Export structured searchable PDF and Markdown outputs with citation anchors",
+    ],
+    instructionsMarkdown: `## Capstone Instructions: Bangla OCR Digitizer\n\n### Objective:\nBuild a full-stack document pipeline capable of parsing complex Bengali compound letters (যুক্তবর্ণ) with 95%+ accuracy.`,
+    starterRepoUrl: "https://github.com/qbitx/bangla-ocr-starter",
+    estimatedHours: 28,
+    isPublished: true,
+  };
+
+  const proj6 = {
+    id: "proj-chaldal-inventory",
+    slug: "chaldal-grocery-logistics-hub",
+    title: "Chaldal-Style Real-Time Grocery Inventory & Cold-Chain Logistics Hub",
+    description: "Full-stack warehousing inventory system featuring live stock reservation, FIFO warehouse dispatching, cold-chain temperature alerts, and delivery route tracking.",
+    difficulty: "beginner" as const,
+    technologies: ["React", "TypeScript", "Neon PostgreSQL", "Drizzle ORM"],
+    learningObjectives: [
+      "Design normalized inventory tables with atomic reservation decrements",
+      "Build batch packing lists and micro-fulfillment dispatch pipelines",
+      "Implement real-time delivery status dashboards with driver assignment",
+    ],
+    instructionsMarkdown: `## Capstone Instructions: Grocery Inventory Hub\n\n### Objective:\nConstruct a responsive warehouse operations portal handling stock replenishment and perishable item expiration tracking.`,
+    starterRepoUrl: "https://github.com/qbitx/chaldal-inventory-starter",
+    estimatedHours: 20,
+    isPublished: true,
+  };
+
+  for (const p of [proj1, proj2, proj3, proj4, proj5, proj6]) {
     const exists = await db.select().from(schema.projects).where(eq(schema.projects.id, p.id));
     if (exists.length === 0) {
       await db.insert(schema.projects).values(p);
+    } else {
+      await db.update(schema.projects).set(p).where(eq(schema.projects.id, p.id));
     }
   }
 
-  // Milestones for Project 1
+  // Milestones for Project 1 & Project 3
   const m1 = {
     id: "ms-p1-1",
     projectId: proj1.id,
@@ -414,14 +607,176 @@ export async function runSeed() {
     requirements: ["Display findings grouped by category (Security, Performance, Style)", "Support mentor manual override grades"],
   };
 
-  for (const ms of [m1, m2, m3]) {
+  const mBkash1 = {
+    id: "ms-bkash-1",
+    projectId: proj3.id,
+    title: "Milestone 1: Double-Entry Ledger Schema & ACID Transactions",
+    description: "Author Drizzle schema with accounts, journal entries, and transactional rollback guarantees.",
+    orderIndex: 1,
+    requirements: ["Design atomic transfer transaction in PostgreSQL", "Enforce non-negative account balances"],
+  };
+
+  const mBkash2 = {
+    id: "ms-bkash-2",
+    projectId: proj3.id,
+    title: "Milestone 2: Idempotent Webhook Processing Engine",
+    description: "Build HMAC-SHA256 signature verification and replay attack protection for payment callbacks.",
+    orderIndex: 2,
+    requirements: ["Verify webhook signatures with timing-safe comparison", "Store idempotency keys with TTL"],
+  };
+
+  for (const ms of [m1, m2, m3, mBkash1, mBkash2]) {
     const exists = await db.select().from(schema.projectMilestones).where(eq(schema.projectMilestones.id, ms.id));
     if (exists.length === 0) {
       await db.insert(schema.projectMilestones).values(ms);
     }
   }
 
-  // 6. Seed Assessment Questions for Course 1, Lesson 1
+  // 6. Seed Course Enrollments for Students
+  const enrollmentsToSeed = [
+    {
+      id: "enr-tanvir-c1",
+      userId: student1Id,
+      courseId: course1.id,
+      status: "active",
+      progressPercent: 74,
+      enrolledAt: new Date(Date.now() - 25 * 86400000),
+    },
+    {
+      id: "enr-tanvir-c2",
+      userId: student1Id,
+      courseId: course2.id,
+      status: "active",
+      progressPercent: 88,
+      enrolledAt: new Date(Date.now() - 20 * 86400000),
+    },
+    {
+      id: "enr-anika-c1",
+      userId: "usr-student-anika",
+      courseId: course1.id,
+      status: "active",
+      progressPercent: 45,
+      enrolledAt: new Date(Date.now() - 14 * 86400000),
+    },
+    {
+      id: "enr-nafis-c2",
+      userId: "usr-student-nafis",
+      courseId: course2.id,
+      status: "active",
+      progressPercent: 30,
+      enrolledAt: new Date(Date.now() - 10 * 86400000),
+    },
+  ];
+
+  for (const enr of enrollmentsToSeed) {
+    const exists = await db.select().from(schema.enrollments).where(eq(schema.enrollments.id, enr.id));
+    if (exists.length === 0) {
+      await db.insert(schema.enrollments).values(enr);
+    }
+  }
+
+  // 7. Seed Project Enrollments & Submissions
+  const projEnrollmentsToSeed = [
+    {
+      id: "penr-tanvir-bkash",
+      userId: student1Id,
+      projectId: proj3.id,
+      status: "submitted",
+      currentMilestone: 2,
+      startedAt: new Date(Date.now() - 15 * 86400000),
+    },
+    {
+      id: "penr-tanvir-ocr",
+      userId: student1Id,
+      projectId: proj5.id,
+      status: "in_progress",
+      currentMilestone: 1,
+      startedAt: new Date(Date.now() - 5 * 86400000),
+    },
+  ];
+
+  for (const pe of projEnrollmentsToSeed) {
+    const exists = await db.select().from(schema.projectEnrollments).where(eq(schema.projectEnrollments.id, pe.id));
+    if (exists.length === 0) {
+      await db.insert(schema.projectEnrollments).values(pe);
+    }
+  }
+
+  // Project Submission & Review
+  const sub1 = {
+    id: "sub-bkash-tanvir",
+    projectId: proj3.id,
+    userId: student1Id,
+    githubRepoUrl: "https://github.com/tanvir-ahmed-buet/bkash-ledger-simulator",
+    liveDemoUrl: "https://bkash-ledger-buet.vercel.app",
+    notes: "Implemented double-entry accounting with PostgreSQL row-level locks, HMAC webhook verification, and automated reconciliation reports.",
+    status: "reviewed",
+    submittedAt: new Date(Date.now() - 2 * 86400000),
+  };
+
+  const subExists = await db.select().from(schema.projectSubmissions).where(eq(schema.projectSubmissions.id, sub1.id));
+  if (subExists.length === 0) {
+    await db.insert(schema.projectSubmissions).values(sub1);
+
+    await db.insert(schema.projectReviews).values({
+      id: "rev-bkash-tanvir",
+      submissionId: sub1.id,
+      reviewerId: mentor1Id,
+      score: 96,
+      feedbackMarkdown: "### Outstanding Engineering Quality!\n- **Idempotency**: Excellent handling of duplicate transaction requests.\n- **ACID Integrity**: Row locks prevent race conditions during concurrent transfers.\n- **Recommendation**: Consider adding Redis cache for read-heavy account balance queries.",
+      status: "approved",
+      reviewedAt: new Date(Date.now() - 86400000),
+    });
+  }
+
+  // 8. Seed Audit Logs
+  const auditLogsToSeed = [
+    {
+      id: "audit-seed-1",
+      actorId: mentor1Id,
+      actorName: "Dr. Tariqul Islam",
+      actorRole: "mentor",
+      actionType: "PROJECT_SUBMISSION_GRADED",
+      action: "Graded bKash Payment Ledger Capstone",
+      targetId: sub1.id,
+      targetType: "project_submission",
+      details: { score: 96, studentName: "Tanvir Ahmed" },
+      createdAt: new Date(Date.now() - 86400000),
+    },
+    {
+      id: "audit-seed-2",
+      actorId: mentor2.id,
+      actorName: "Eng. Mahbubur Rahman",
+      actorRole: "mentor",
+      actionType: "OFFICE_HOURS_SCHEDULED",
+      action: "Scheduled Algorithm & Competitive Programming Clinic",
+      targetId: "oh-buet-1",
+      targetType: "office_hour",
+      details: { location: "BUET ECE Building Lab 502 / Google Meet" },
+      createdAt: new Date(Date.now() - 2 * 86400000),
+    },
+    {
+      id: "audit-seed-3",
+      actorId: adminId,
+      actorName: "System Super Admin",
+      actorRole: "super_admin",
+      actionType: "ORGANIZATION_REGISTERED",
+      action: "Registered Bangladesh University of Engineering and Technology",
+      targetId: "org-buet",
+      targetType: "organization",
+      details: { domain: "buet.ac.bd", status: "active" },
+      createdAt: new Date(Date.now() - 30 * 86400000),
+    },
+  ];
+
+  for (const log of auditLogsToSeed) {
+    const exists = await db.select().from(schema.auditLogs).where(eq(schema.auditLogs.id, log.id));
+    if (exists.length === 0) {
+      await db.insert(schema.auditLogs).values(log);
+    }
+  }
+
+  // 9. Seed Assessment Questions for Course 1, Lesson 1
   const assessment1 = {
     id: "asm-c1-l1",
     lessonId: lesson1.id,

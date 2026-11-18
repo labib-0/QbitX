@@ -11,7 +11,7 @@ export class SummaryAutomation {
       studentsNeedingAttentionCount: 2,
       pendingGradingCount: 18,
       completedModulesCount: 42,
-      digestSummary: "Class engagement remains high at 84%. Michael Chen needs assistance with Python recursion concepts.",
+      digestSummary: "Class engagement remains high at 84%. Nafis Fuad needs assistance with Python recursion concepts.",
     };
   }
 

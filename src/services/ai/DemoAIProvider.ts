@@ -57,15 +57,20 @@ export class DemoAIProvider implements IAIProvider {
     const courseTitle = context?.courseTitle || "CS Fundamentals";
 
     if (matchedItem) {
-      responseText = `Hello ${userName}! Here is a detailed breakdown for your query regarding your **${courseTitle}** learning path:\n\n` + matchedItem.response;
+      let formattedText = matchedItem.response;
+      if (matchedItem.codeSnippet) {
+        const lang = matchedItem.codeSnippet.includes("def ") || matchedItem.codeSnippet.includes("# ") ? "python" : matchedItem.codeSnippet.includes("SELECT ") ? "sql" : "typescript";
+        formattedText += `\n\n\`\`\`${lang}\n${matchedItem.codeSnippet}\n\`\`\``;
+      }
+      responseText = formattedText;
       codeSnippet = matchedItem.codeSnippet;
       followUps = matchedItem.suggestedFollowUps || [];
     } else {
-      responseText = `Hello ${userName}! As your 24/7 QbitX AI Mentor, I analyzed your prompt regarding **${courseTitle}**.\n\nGreat technical question! Software engineering requires balancing clean code architecture, data structures, and production scalability. Let me know if you would like code examples, system design breakdowns, or project milestone recommendations!`;
+      responseText = `Hello ${userName}! As your 24/7 QbitX AI Mentor, I'm here to help with your **${courseTitle}** studies.\n\nGreat question! What specific aspect would you like to explore? I can provide code examples, algorithmic complexity analysis, or step-by-step debugging guidance.`;
       followUps = [
-        "Explain Binary Search algorithm step-by-step",
-        "Teach me React Hooks (useState & useEffect)",
-        "Suggest capstone project ideas",
+        "Explain Binary Search algorithm and its Big-O complexity",
+        "Teach me React Hooks (useState, useEffect, useCallback)",
+        "Explain 3rd Normal Form (3NF) and database indexing",
       ];
     }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bot, Send, RefreshCw } from "lucide-react";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 export function MentorAIAssistant() {
   const [messages, setMessages] = useState([
@@ -103,9 +104,13 @@ export function MentorAIAssistant() {
                 {m.sender === "user" ? "M" : <Bot className="h-4 w-4" />}
               </div>
               <div className={`p-4 rounded-2xl text-xs leading-relaxed max-w-[85%] ${
-                m.sender === "user" ? "bg-purple-600 text-white font-medium" : "bg-muted/60 border border-border/80 text-foreground"
+                m.sender === "user" ? "bg-purple-600 text-white font-medium" : "bg-card border border-border/80 text-foreground shadow-sm"
               }`}>
-                <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
+                {m.sender === "user" ? (
+                  <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
+                ) : (
+                  <MarkdownRenderer content={m.text} />
+                )}
               </div>
             </div>
           ))}

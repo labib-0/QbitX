@@ -44,7 +44,7 @@ export function WelcomeHeader({ overview, onOpenAIAssistant }: WelcomeHeaderProp
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight font-heading">
-              Good Morning, <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500">Hello {name} 👋</span>
+              Welcome Back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500">{name} 👋</span>
             </h1>
 
             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed font-medium">

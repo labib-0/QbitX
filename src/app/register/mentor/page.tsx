@@ -117,7 +117,7 @@ export default function MentorRegisterPage() {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              placeholder="Sarah Chen"
+              placeholder="Dr. Tariqul Islam"
               required
               className={inputClasses}
             />

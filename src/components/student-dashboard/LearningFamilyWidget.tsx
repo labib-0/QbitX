@@ -18,6 +18,39 @@ interface MentorItem {
   image?: string;
 }
 
+const FALLBACK_MENTORS: MentorItem[] = [
+  {
+    id: "mprof-tariqul",
+    userId: "usr-mentor-tariqul",
+    fullName: "Dr. Tariqul Islam",
+    headline: "Associate Professor, CSE, BUET & Lead AI Architect",
+    expertise: ["Next.js", "TypeScript", "LLM Systems", "React 19"],
+    companyOrUniversity: "BUET / QbitX Faculty",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-tariqul",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+  },
+  {
+    id: "mprof-mahbubur",
+    userId: "usr-mentor-mahbubur",
+    fullName: "Eng. Mahbubur Rahman",
+    headline: "Senior Staff Software Engineer (ex-Brain Station 23 / Chaldal)",
+    expertise: ["Algorithms", "Data Structures", "System Design"],
+    companyOrUniversity: "Brain Station 23 / BUET CSE Alum",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-mahbubur",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
+  },
+  {
+    id: "mprof-nusrat",
+    userId: "usr-mentor-nusrat",
+    fullName: "Nusrat Jahan",
+    headline: "Senior Frontend Architect & UI/UX Specialist",
+    expertise: ["Frontend Architecture", "UI/UX Engineering", "Web Performance"],
+    companyOrUniversity: "BRAC University / QbitX Faculty",
+    meetingLink: "https://meet.google.com/qbitx-office-hours-nusrat",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200",
+  },
+];
+
 export function LearningFamilyWidget() {
   const [mentors, setMentors] = useState<MentorItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,11 +61,14 @@ export function LearningFamilyWidget() {
         setLoading(true);
         const res = await fetch("/api/mentors");
         const json = await res.json();
-        if (res.ok && json.success) {
-          setMentors(json.data || []);
+        if (res.ok && json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setMentors(json.data);
+        } else {
+          setMentors(FALLBACK_MENTORS);
         }
       } catch (err) {
-        console.error("Failed to load mentors:", err);
+        console.warn("Using fallback mentors for family widget:", err);
+        setMentors(FALLBACK_MENTORS);
       } finally {
         setLoading(false);
       }

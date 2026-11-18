@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Presentation,
   Users,
   UserCheck,
   BookOpen,
@@ -24,6 +25,7 @@ export function AdminSidebar() {
 
   const navItems = [
     { label: "Overview Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { label: "Pitch Deck & Docs", href: "/admin/docs", icon: Presentation },
     { label: "User Management", href: "/admin/users", icon: Users },
     { label: "Mentor Approvals", href: "/admin/mentors", icon: UserCheck },
     { label: "Course Quality Oversight", href: "/admin/courses", icon: BookOpen },

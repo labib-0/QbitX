@@ -29,7 +29,7 @@ export function LiveSessionViewer({
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground font-heading">{title}</h1>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Join Dr. Sarah Chen for live code reviews, architecture Q&A, and real-time debugging assistance.
+          Join Dr. Tariqul Islam for live code reviews, architecture Q&A, and real-time debugging assistance.
         </p>
 
         <div className="p-4 rounded-2xl bg-muted/40 border border-border flex items-center justify-between text-xs">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Megaphone, Calendar, ChevronRight, AlertCircle, Sparkles } from "lucide-react";
 import type { Announcement } from "@/lib/dashboardData";
+import { MOCK_ANNOUNCEMENTS } from "@/lib/dashboardData";
 
 const CATEGORY_STYLES: Record<string, { label: string; style: string }> = {
   academic: { label: "Academic", style: "bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400" },
@@ -21,22 +22,15 @@ export function NoticePanel() {
     fetch("/api/student/dashboard")
       .then((r) => r.json())
       .then((json) => {
-        if (json.success && json.data?.announcements) {
+        if (json.success && Array.isArray(json.data?.announcements) && json.data.announcements.length > 0) {
           setAnnouncements(json.data.announcements);
         } else {
-          setAnnouncements([
-            {
-              id: "ann-welcome",
-              title: "Welcome to QbitX Rebuild!",
-              body: "Explore the new Full-Stack Web & AI Engineering courses and build hands-on capstone projects.",
-              category: "general",
-              date: "Today",
-              urgent: false,
-            },
-          ]);
+          setAnnouncements(MOCK_ANNOUNCEMENTS);
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        setAnnouncements(MOCK_ANNOUNCEMENTS);
+      })
       .finally(() => setLoading(false));
   }, []);
 

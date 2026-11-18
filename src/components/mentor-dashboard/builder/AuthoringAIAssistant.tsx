@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bot, Sparkles, RefreshCw, CheckCircle2 } from "lucide-react";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 
 interface AuthoringAIAssistantProps {
   onApplyOutline?: (outlineText: string) => void;
@@ -64,8 +65,8 @@ export function AuthoringAIAssistant({ onApplyOutline }: AuthoringAIAssistantPro
       )}
 
       {output && !loading && (
-        <div className="p-4 rounded-2xl bg-muted/40 border border-border text-xs leading-relaxed space-y-2">
-          <p className="whitespace-pre-line text-foreground font-mono">{output}</p>
+        <div className="p-4 rounded-2xl bg-card border border-border text-xs leading-relaxed space-y-3">
+          <MarkdownRenderer content={output} />
           {onApplyOutline && (
             <button
               onClick={() => onApplyOutline(output)}

@@ -9,10 +9,10 @@ import { AuditLogService } from "./AuditLogService";
 export const MOCK_AT_RISK_STUDENTS: AtRiskStudent[] = [
   {
     studentId: "usr-student-3",
-    studentName: "Michael Chen",
-    email: "m.chen@qbitx.com",
+    studentName: "Nafis Fuad",
+    email: "nafis.fuad@qbitx.com",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-    courseTitle: "CS Fundamentals With QbitX",
+    courseTitle: "Data Structures & Competitive Algorithms",
     riskLevel: "high",
     riskFactors: ["4 lessons behind schedule", "Missed 2 lab deadlines", "Quiz average < 70%"],
     lastActive: "3 days ago",
@@ -23,10 +23,10 @@ export const MOCK_AT_RISK_STUDENTS: AtRiskStudent[] = [
   },
   {
     studentId: "usr-student-4",
-    studentName: "David Miller",
-    email: "david.m@qbitx.com",
+    studentName: "Farhan Sadik",
+    email: "farhan.sadik@qbitx.com",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
-    courseTitle: "Introduction to Programming Language",
+    courseTitle: "Introduction to Programming & Problem Solving",
     riskLevel: "medium",
     riskFactors: ["Incomplete Module 2 quiz", "No platform login in 48 hours"],
     lastActive: "2 days ago",

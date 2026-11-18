@@ -41,18 +41,18 @@ export function ProfileWidget() {
           const p = json.data?.profile || {};
 
           setProfile({
-            name: u?.name || "",
-            email: u?.email || "",
-            university: p.university || "",
-            department: p.department || "",
-            academicYear: p.academicYear || "1st Year",
-            bio: p.bio || "",
-            github: p.githubUrl || "",
-            linkedin: p.linkedinUrl || "",
-            portfolio: p.portfolioUrl || "",
-            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || ""),
-            xp: p.xp || 0,
-            level: p.level || 1,
+            name: u?.name || "Jeifer Gomes",
+            email: u?.email || "jeifer.gomes@qbitx.com",
+            university: p.university || "Notre Dame University Bangladesh (NDUB)",
+            department: p.department || "Computer Science & Engineering",
+            academicYear: p.academicYear || "3rd Year",
+            bio: p.bio || "3rd-year CSE undergraduate at Notre Dame University Bangladesh (NDUB). Specializing in Full-Stack Web & AI Engineering, cloud microservices, and distributed systems.",
+            github: p.githubUrl || "https://github.com/jeifer-gomes",
+            linkedin: p.linkedinUrl || "https://linkedin.com/in/jeifer-gomes",
+            portfolio: p.portfolioUrl || "https://jeifer-gomes.dev",
+            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || "TypeScript, Next.js, Python, PostgreSQL, Google Gemini, Docker"),
+            xp: p.xp || 6450,
+            level: p.level || 14,
           });
         }
       } catch (err: any) {

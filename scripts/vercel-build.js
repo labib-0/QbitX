@@ -20,6 +20,16 @@ function run(command) {
   execSync(command, { stdio: "inherit", env: process.env });
 }
 
+if (vercelEnv === "production") {
+  const authSecret = process.env.BETTER_AUTH_SECRET || "";
+  if (!authSecret || authSecret.includes("replace-with-a-random") || authSecret.includes("dev-secret")) {
+    console.error(
+      "[qbitx-build] FATAL: BETTER_AUTH_SECRET must be set to a secure, random 32+ character secret in production Vercel environment variables."
+    );
+    process.exit(1);
+  }
+}
+
 if (vercelEnv === "production" && isUsableDatabase) {
   console.log("[qbitx-build] Applying database migrations...");
   // Fails the deployment on error rather than shipping a schema-less app.

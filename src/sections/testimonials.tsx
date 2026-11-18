@@ -11,26 +11,26 @@ import { Quote } from "lucide-react"
 
 const testimonials = [
   {
-    name: "Alex Johnson",
-    role: "Frontend Developer @ TechCorp",
-    content: "QbitX completely changed how I learn. Building real projects with AI guidance helped me land my first job faster than any bootcamp could have.",
+    name: "Jeifer Gomes",
+    role: "Software Engineer @ Brain Station 23 (NDUB CSE Alum)",
+    content: "QbitX completely changed how I learn. Building real projects like the bKash payment ledger with AI guidance helped me land my job faster than any traditional course.",
   },
   {
-    name: "Sarah Williams",
-    role: "Computer Science Student",
+    name: "Anika Tabassum",
+    role: "Computer Science Junior @ NSU",
     content: "The AI Mentor is incredible. It doesn't just give you the answer, it teaches you how to think like a software engineer. Highly recommended!",
   },
   {
-    name: "Michael Chen",
-    role: "Full Stack Engineer",
-    content: "The industry readiness track is no joke. I learned Docker, CI/CD, and system design—stuff they never taught us in university.",
+    name: "Nafis Fuad",
+    role: "Full Stack Engineer @ Pathao",
+    content: "The industry readiness track is top notch. I learned Docker, CI/CD, Next.js App Router, and system design—skills that directly apply to production code.",
   },
   {
-    name: "Emily Davis",
-    role: "Software Engineer Intern",
-    content: "The collaborative team projects prepared me perfectly for my internship. I already knew how to work with Jira, Git, and code reviews.",
+    name: "Sumaiya Rahman",
+    role: "Software Engineer Intern @ bKash (IUT Alum)",
+    content: "The collaborative team projects prepared me perfectly for my internship. I already knew how to work with PRs, Git rebase, and code reviews.",
   },
-]
+];
 
 export function TestimonialsSection() {
   return (

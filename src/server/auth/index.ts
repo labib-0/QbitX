@@ -35,9 +35,30 @@ const trustedOrigins = Array.from(
   )
 );
 
-if (process.env.NODE_ENV === "production" && !process.env.BETTER_AUTH_SECRET) {
+const isProduction = process.env.NODE_ENV === "production";
+const isTestOrLocal = process.env.ALLOW_PGLITE_TEST === "true";
+const isBuildPhase =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  process.env.npm_lifecycle_event === "build";
+
+const resolvedSecret = process.env.BETTER_AUTH_SECRET;
+
+if (
+  isProduction &&
+  !isTestOrLocal &&
+  !isBuildPhase &&
+  (!resolvedSecret ||
+    resolvedSecret === "dev-secret-32-chars-minimum-qbitx-edtech-platform" ||
+    resolvedSecret === "replace-with-a-random-32-character-secret-in-production")
+) {
+  throw new Error(
+    "[QbitX Auth Security] FATAL: BETTER_AUTH_SECRET is missing or using an insecure default in production. Set a random 32+ character secret in production environment variables."
+  );
+}
+
+if (!isProduction && !resolvedSecret) {
   console.warn(
-    "[QbitX Auth] BETTER_AUTH_SECRET is not set. Sessions are signed with the development fallback; set a strong secret in your deployment environment."
+    "[QbitX Auth] BETTER_AUTH_SECRET is not set in development. Using local development fallback secret."
   );
 }
 
@@ -73,8 +94,10 @@ export const auth = betterAuth({
         } catch (err) {
           console.error("Failed to send reset password email via Resend:", err);
         }
+      } else if (!isProduction) {
+        console.log(`[QbitX Auth] Password reset link generated for ${user.email}: ${url}`);
       } else {
-        console.log(`[QbitX Auth] Password reset link generated for ${user.email}: ${url} (Token: ${token})`);
+        console.warn(`[QbitX Auth] Password reset requested for ${user.email}, but RESEND_API_KEY is not configured.`);
       }
     },
   },
@@ -98,8 +121,10 @@ export const auth = betterAuth({
         } catch (err) {
           console.error("Failed to send email verification via Resend:", err);
         }
+      } else if (!isProduction) {
+        console.log(`[QbitX Auth] Email verification link generated for ${user.email}: ${url}`);
       } else {
-        console.log(`[QbitX Auth] Email verification link generated for ${user.email}: ${url} (Token: ${token})`);
+        console.warn(`[QbitX Auth] Email verification requested for ${user.email}, but RESEND_API_KEY is not configured.`);
       }
     },
     sendOnSignUp: false,

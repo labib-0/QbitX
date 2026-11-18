@@ -20,8 +20,8 @@ export class NotificationService {
       {
         id: "n1",
         type: "mentor",
-        title: "Senior Mentor Feedback Available",
-        message: "Dr. Sarah Chen reviewed your RAG Pipeline pull request #14.",
+        title: "Senior Faculty Feedback Available",
+        message: "Dr. Tariqul Islam reviewed your bKash Payment Gateway pull request #14.",
         timeAgo: "15 min ago",
         read: false,
       },

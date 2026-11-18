@@ -34,6 +34,12 @@ if (vercelEnv === "production" && isUsableDatabase) {
   console.log("[qbitx-build] Applying database migrations...");
   // Fails the deployment on error rather than shipping a schema-less app.
   run("npx --no-install drizzle-kit migrate");
+  console.log("[qbitx-build] Bootstrapping demo accounts and curriculum seed...");
+  try {
+    run("npx tsx scripts/bootstrap-demo.ts");
+  } catch (seedErr) {
+    console.warn("[qbitx-build] Warning: bootstrap demo seed encountered non-fatal error:", seedErr.message);
+  }
 } else if (vercelEnv === "production") {
   console.error(
     "[qbitx-build] DATABASE_URL is required for production deployments. " +

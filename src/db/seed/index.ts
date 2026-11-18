@@ -303,9 +303,11 @@ export async function runSeed() {
   };
 
   for (const mp of [mProf1, mProf2, mProf3]) {
-    const exists = await db.select().from(schema.mentorProfiles).where(eq(schema.mentorProfiles.id, mp.id));
+    const exists = await db.select().from(schema.mentorProfiles).where(eq(schema.mentorProfiles.userId, mp.userId));
     if (exists.length === 0) {
       await db.insert(schema.mentorProfiles).values(mp);
+    } else {
+      await db.update(schema.mentorProfiles).set(mp).where(eq(schema.mentorProfiles.userId, mp.userId));
     }
   }
 

@@ -5,19 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { ErrorAlert } from "@/components/auth/ErrorAlert";
-import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
 import { useAuth } from "@/context/authContext";
-import { Eye, EyeOff, RefreshCw, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, RefreshCw, ArrowRight, Sparkles, GraduationCap } from "lucide-react";
 
 export default function StudentLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("student@qbitx.com");
+  const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { user, login } = useAuth();
+  const { user, login, demoLogin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,6 +29,19 @@ export default function StudentLoginPage() {
       }
     }
   }, [user, router]);
+
+  const handleInstantDemoLogin = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      await demoLogin("student");
+      router.push("/student/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Failed to log in with student demo credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +58,7 @@ export default function StudentLoginPage() {
         router.push("/student/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "No registered account found with this email. Please register first!");
+      setError(err.message || "Invalid credentials. Please verify your email and password.");
     } finally {
       setLoading(false);
     }
@@ -58,9 +69,33 @@ export default function StudentLoginPage() {
       {/* Title */}
       <div className="space-y-1">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-sky-600 dark:text-sky-400 font-heading">
-          Welcome Back
+          Student Portal Sign In
         </h2>
-        <p className="text-xs text-muted-foreground">Log in to access your student dashboard & courses.</p>
+        <p className="text-xs text-muted-foreground">
+          Log in to access your student dashboard, capstone projects & AI mentor.
+        </p>
+      </div>
+
+      {/* 1-Click Demo Box for Judges */}
+      <div className="bg-sky-500/10 border border-sky-500/20 p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div>
+          <div className="flex items-center gap-1.5 font-bold text-sky-700 dark:text-sky-300">
+            <GraduationCap className="h-4 w-4" />
+            <span>Demo Student: Jeifer Gomes (NDUB CSE)</span>
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            student@qbitx.com • password123
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={handleInstantDemoLogin}
+          className="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm whitespace-nowrap"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>1-Click Student Login</span>
+        </button>
       </div>
 
       <ErrorAlert message={error} onDismiss={() => setError("")} />
@@ -72,7 +107,7 @@ export default function StudentLoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder="student@qbitx.com"
             required
             className="w-full rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 px-4 py-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-colors"
           />
@@ -91,56 +126,41 @@ export default function StudentLoginPage() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
-            {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
-        </div>
-
-        {/* Remember Me & Forgot password */}
-        <div className="flex items-center justify-between text-xs pt-1">
-          <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 cursor-pointer font-medium">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-slate-300 dark:border-slate-800 text-sky-500 focus:ring-sky-500"
-            />
-            <span>Remember Me</span>
-          </label>
-
-          <Link href="/forgot-password" className="text-sky-600 dark:text-sky-400 font-extrabold hover:underline font-heading">
-            Forgot password?
-          </Link>
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-sky-500 hover:bg-sky-600 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-sky-500/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-heading"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white px-4 py-3.5 text-sm font-bold shadow-lg shadow-sky-500/25 transition-all font-heading"
         >
           {loading ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>Verifying Credentials...</span>
+            </>
           ) : (
             <>
-              <span>Log in</span>
+              <span>Sign In as Student</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
         </button>
       </form>
 
-      {/* Demo Google & GitHub Registration/Login Option */}
-      <SocialLoginButton role="student" />
-
-      {/* Footer Link */}
-      <p className="text-center text-xs text-slate-600 dark:text-slate-400 pt-2 font-medium">
-        Don&apos;t have an account?{" "}
-        <Link href="/register/student" className="text-sky-600 dark:text-sky-400 font-extrabold hover:underline font-heading">
-          Register now
-        </Link>
-      </p>
+      {/* Switch to General Login */}
+      <div className="text-center pt-2 space-y-1">
+        <p className="text-xs text-muted-foreground">
+          Need Mentor or Admin access?{" "}
+          <Link href="/login" className="text-sky-500 hover:underline font-bold">
+            Switch Portal
+          </Link>
+        </p>
+      </div>
     </AuthLayout>
   );
 }

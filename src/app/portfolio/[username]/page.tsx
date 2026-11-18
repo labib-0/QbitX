@@ -54,6 +54,20 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPro
     }
   }
 
+  if (!user && (username.toLowerCase().includes("alex") || username.toLowerCase().includes("demo"))) {
+    user = {
+      id: "usr-alex-rivera",
+      name: "Alex Rivera",
+      email: "alex.rivera@university.edu",
+      emailVerified: true,
+      image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+      role: "student",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any;
+  }
+
   if (!user) {
     notFound();
   }

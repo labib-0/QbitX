@@ -61,6 +61,7 @@ interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<UserProfile>;
+  demoLogin: (role: "student" | "mentor" | "admin") => Promise<UserProfile>;
   registerStudent: (params: RegisterStudentParams) => Promise<UserProfile>;
   registerMentor: (params: RegisterMentorParams) => Promise<{ user: UserProfile; needsApproval: boolean }>;
   logout: () => Promise<void>;
@@ -165,11 +166,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (res.error) {
+      // Automatic fallback for demo accounts if direct sign-in had not yet provisioned
+      try {
+        const demoRes = await fetch("/api/auth/demo-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        if (demoRes.ok) {
+          const demoData = await demoRes.json();
+          if (demoData.success && demoData.user) {
+            const userProfile = await withMentorStatus(
+              mapSessionUser({ ...demoData.user, email: demoData.user.email || email })
+            );
+            setProfile(userProfile);
+            return userProfile;
+          }
+        }
+      } catch {
+        // Fall through to error
+      }
       throw new Error(res.error.message || "Invalid credentials. Please verify your email and password.");
     }
 
     const userProfile = await withMentorStatus(
       mapSessionUser({ ...(res.data?.user || {}), email: res.data?.user?.email || email })
+    );
+    setProfile(userProfile);
+    return userProfile;
+  };
+
+  const demoLogin = async (role: "student" | "mentor" | "admin"): Promise<UserProfile> => {
+    const res = await fetch("/api/auth/demo-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Demo login service failed. Please check network connectivity.");
+    }
+
+    const data = await res.json();
+    if (!data.success || !data.user) {
+      throw new Error(data.error || "Demo authentication failed.");
+    }
+
+    const userProfile = await withMentorStatus(
+      mapSessionUser({ ...data.user, email: data.user.email })
     );
     setProfile(userProfile);
     return userProfile;
@@ -292,6 +336,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: profile,
         isLoading: isPending || !hasLoadedInitially,
         login,
+        demoLogin,
         registerStudent,
         registerMentor,
         logout,

@@ -11,8 +11,8 @@ import { Quote } from "lucide-react"
 
 const testimonials = [
   {
-    name: "Tanvir Ahmed",
-    role: "Software Engineer @ Brain Station 23 (BUET CSE Alum)",
+    name: "Jeifer Gomes",
+    role: "Software Engineer @ Brain Station 23 (NDUB CSE Alum)",
     content: "QbitX completely changed how I learn. Building real projects like the bKash payment ledger with AI guidance helped me land my job faster than any traditional course.",
   },
   {

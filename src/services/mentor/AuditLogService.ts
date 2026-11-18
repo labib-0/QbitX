@@ -14,7 +14,7 @@ const auditLogStore: AuditLogEntry[] = [
     actionType: "ASSIGNMENT_GRADED",
     targetId: "sub-1",
     targetType: "assignment",
-    details: "Graded 'bKash/Nagad Payment Ledger Capstone' for Tanvir Ahmed with score 96/100.",
+    details: "Graded 'bKash/Nagad Payment Ledger Capstone' for Jeifer Gomes with score 96/100.",
     timestamp: "2026-07-31T14:30:00Z",
   },
   {

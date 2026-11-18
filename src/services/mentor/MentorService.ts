@@ -25,12 +25,12 @@ export const MOCK_MENTOR_STATS: MentorStats = {
 export const MOCK_STUDENTS_LIST: StudentProfileSummary[] = [
   {
     id: "usr-student-demo",
-    name: "Tanvir Ahmed",
-    email: "student@qbitx.com",
+    name: "Jeifer Gomes",
+    email: "jeifer.gomes@qbitx.com",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-    track: "Software Engineering & AI",
+    track: "Full-Stack Web & AI Engineering",
     department: "Computer Science & Engineering",
-    university: "Bangladesh University of Engineering and Technology (BUET)",
+    university: "Notre Dame University Bangladesh (NDUB)",
     enrolledCoursesCount: 4,
     completedLessonsCount: 18,
     streakDays: 14,
@@ -77,13 +77,13 @@ export const MOCK_SUBMISSIONS: AssignmentSubmissionItem[] = [
   {
     id: "sub-1",
     studentId: "usr-student-demo",
-    studentName: "Tanvir Ahmed",
+    studentName: "Jeifer Gomes",
     studentAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
     assignmentTitle: "bKash / Nagad Payment Ledger Capstone",
     courseTitle: "Full-Stack AI Web Engineering with Next.js",
     submittedAt: "Today, 10:15 AM",
     status: "pending_review",
-    repoUrl: "https://github.com/tanvir-ahmed-buet/bkash-ledger-simulator",
+    repoUrl: "https://github.com/jeifer-gomes/bkash-ledger-simulator",
     maxScore: 100,
   },
   {

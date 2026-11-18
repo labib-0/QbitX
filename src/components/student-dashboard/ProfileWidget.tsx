@@ -41,18 +41,18 @@ export function ProfileWidget() {
           const p = json.data?.profile || {};
 
           setProfile({
-            name: u?.name || "Tanvir Ahmed",
-            email: u?.email || "student@qbitx.com",
-            university: p.university || "Bangladesh University of Engineering and Technology (BUET)",
+            name: u?.name || "Jeifer Gomes",
+            email: u?.email || "jeifer.gomes@qbitx.com",
+            university: p.university || "Notre Dame University Bangladesh (NDUB)",
             department: p.department || "Computer Science & Engineering",
-            academicYear: p.academicYear || "2nd Year",
-            bio: p.bio || "2nd-year CSE student at BUET passionate about Next.js, AI system architectures, and algorithmic problem solving.",
-            github: p.githubUrl || "https://github.com/tanvir-ahmed-buet",
-            linkedin: p.linkedinUrl || "https://linkedin.com/in/tanvir-ahmed-cse",
-            portfolio: p.portfolioUrl || "https://tanvir-buet.dev",
-            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || "TypeScript, Next.js, Python, PostgreSQL, C++"),
-            xp: p.xp || 4850,
-            level: p.level || 12,
+            academicYear: p.academicYear || "3rd Year",
+            bio: p.bio || "3rd-year CSE undergraduate at Notre Dame University Bangladesh (NDUB). Specializing in Full-Stack Web & AI Engineering, cloud microservices, and distributed systems.",
+            github: p.githubUrl || "https://github.com/jeifer-gomes",
+            linkedin: p.linkedinUrl || "https://linkedin.com/in/jeifer-gomes",
+            portfolio: p.portfolioUrl || "https://jeifer-gomes.dev",
+            skills: Array.isArray(p.skills) ? p.skills.join(", ") : (p.skills || "TypeScript, Next.js, Python, PostgreSQL, Google Gemini, Docker"),
+            xp: p.xp || 6450,
+            level: p.level || 14,
           });
         }
       } catch (err: any) {

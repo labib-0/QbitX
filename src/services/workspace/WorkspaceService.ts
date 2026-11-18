@@ -68,7 +68,7 @@ export const INITIAL_DISCUSSIONS: DiscussionThread[] = [
     id: "disc-1",
     lessonId: "les-1",
     authorId: "usr-student-2",
-    authorName: "Tanvir Ahmed",
+    authorName: "Jeifer Gomes",
     authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
     authorRole: "student",
     title: "Difference between Python 3.11 and 3.12 GIL improvements?",

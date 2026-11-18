@@ -37,7 +37,7 @@ const FALLBACK_ADMIN_STATS: AdminStats = {
       action: "Graded bKash Payment Ledger Capstone",
       actorName: "Dr. Tariqul Islam",
       actorRole: "mentor",
-      details: "Awarded score 96/100 to Tanvir Ahmed (BUET CSE).",
+      details: "Awarded score 96/100 to Jeifer Gomes (NDUB CSE).",
       createdAt: new Date(Date.now() - 3600000).toISOString(),
     },
     {

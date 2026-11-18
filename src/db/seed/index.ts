@@ -34,7 +34,17 @@ export async function runSeed() {
     isPublished: true,
   };
 
-  for (const trk of [trackWebAI, trackCS]) {
+  const trackCloudSys = {
+    id: "trk-cloud-sys",
+    slug: "cloud-systems",
+    title: "Cloud & Distributed Systems Architecture",
+    description: "Microservices, event streams, Docker, Kubernetes, and high-concurrency databases.",
+    icon: "Server",
+    orderIndex: 3,
+    isPublished: true,
+  };
+
+  for (const trk of [trackWebAI, trackCS, trackCloudSys]) {
     const existing = await db.select().from(schema.tracks).where(eq(schema.tracks.id, trk.id));
     if (existing.length === 0) {
       await db.insert(schema.tracks).values(trk);
@@ -108,17 +118,17 @@ export async function runSeed() {
     await db.update(schema.users).set({ name: "Dr. Tariqul Islam" }).where(eq(schema.users.id, mentor1Id));
   }
 
-  // Seed Test Student Tanvir Ahmed with Credential Auth
+  // Seed Test Student Jeifer Gomes with Credential Auth
   const studentEmail = "student@qbitx.com";
   const existingStudent = await db.select().from(schema.users).where(eq(schema.users.email, studentEmail));
-  let student1Id = "usr-student-tanvir";
+  let student1Id = "usr-student-jeifer";
   if (existingStudent.length === 0) {
     try {
       const res = await auth.api.signUpEmail({
         body: {
           email: studentEmail,
           password: "StudentPassword123!",
-          name: "Tanvir Ahmed",
+          name: "Jeifer Gomes",
         },
       });
       student1Id = res.user.id;
@@ -129,7 +139,7 @@ export async function runSeed() {
     } catch {
       await db.insert(schema.users).values({
         id: student1Id,
-        name: "Tanvir Ahmed",
+        name: "Jeifer Gomes",
         email: studentEmail,
         emailVerified: true,
         role: "student",
@@ -138,7 +148,39 @@ export async function runSeed() {
     }
   } else {
     student1Id = existingStudent[0].id;
-    await db.update(schema.users).set({ name: "Tanvir Ahmed" }).where(eq(schema.users.id, student1Id));
+    await db.update(schema.users).set({ name: "Jeifer Gomes" }).where(eq(schema.users.id, student1Id));
+  }
+
+  // Seed Dedicated Jeifer Gomes Account (jeifer.gomes@qbitx.com)
+  const jeiferEmail = "jeifer.gomes@qbitx.com";
+  let jeiferId = "usr-student-jeifer-direct";
+  const existingJeifer = await db.select().from(schema.users).where(eq(schema.users.email, jeiferEmail));
+  if (existingJeifer.length === 0) {
+    try {
+      const res = await auth.api.signUpEmail({
+        body: {
+          email: jeiferEmail,
+          password: "StudentPassword123!",
+          name: "Jeifer Gomes",
+        },
+      });
+      jeiferId = res.user.id;
+      await db
+        .update(schema.users)
+        .set({ role: "student", emailVerified: true })
+        .where(eq(schema.users.id, jeiferId));
+    } catch {
+      await db.insert(schema.users).values({
+        id: jeiferId,
+        name: "Jeifer Gomes",
+        email: jeiferEmail,
+        emailVerified: true,
+        role: "student",
+        status: "active",
+      });
+    }
+  } else {
+    jeiferId = existingJeifer[0].id;
   }
 
   // Seed Mentor Eng. Mahbubur Rahman
@@ -268,24 +310,41 @@ export async function runSeed() {
   }
 
   // Student Profiles
-  const sProfTanvir = {
-    id: "sprof-tanvir",
+  const sProfJeifer = {
+    id: "sprof-jeifer",
     userId: student1Id,
-    university: "Bangladesh University of Engineering and Technology (BUET)",
+    university: "Notre Dame University Bangladesh (NDUB)",
     department: "Computer Science & Engineering",
-    academicYear: "2nd Year",
-    bio: "2nd-year CSE student at BUET passionate about Next.js, AI system architectures, and algorithmic problem solving.",
-    skills: ["TypeScript", "Next.js", "Python", "C++", "PostgreSQL"],
-    githubUrl: "https://github.com/tanvir-ahmed-buet",
-    linkedinUrl: "https://linkedin.com/in/tanvir-ahmed-cse",
-    xp: 4850,
-    level: 12,
+    academicYear: "3rd Year",
+    bio: "3rd-year CSE undergraduate at Notre Dame University Bangladesh (NDUB). Specializing in Full-Stack Web & AI Engineering, cloud microservices, and distributed systems.",
+    track: "Full-Stack Web & AI Engineering",
+    learningGoals: ["Master Next.js 16 App Router", "Architect Microservices", "Build Production AI Systems"],
+    selectedSkills: ["TypeScript", "Next.js", "Python", "PostgreSQL", "Google Gemini", "Docker"],
+    careerInterests: ["Full-Stack Engineer", "AI Application Developer", "Cloud Architect"],
+    skills: ["TypeScript", "Next.js", "Python", "PostgreSQL", "Google Gemini", "Docker", "Tailwind CSS"],
+    githubUrl: "https://github.com/jeifer-gomes",
+    linkedinUrl: "https://linkedin.com/in/jeifer-gomes",
+    portfolioUrl: "https://jeifer-gomes.dev",
+    onboardingCompleted: true,
+    xp: 6450,
+    level: 14,
   };
   const existsSProf = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.userId, student1Id));
   if (existsSProf.length === 0) {
-    await db.insert(schema.studentProfiles).values(sProfTanvir);
+    await db.insert(schema.studentProfiles).values(sProfJeifer);
   } else {
-    await db.update(schema.studentProfiles).set(sProfTanvir).where(eq(schema.studentProfiles.userId, student1Id));
+    await db.update(schema.studentProfiles).set(sProfJeifer).where(eq(schema.studentProfiles.userId, student1Id));
+  }
+
+  const existsJeiferProf = await db.select().from(schema.studentProfiles).where(eq(schema.studentProfiles.userId, jeiferId));
+  if (existsJeiferProf.length === 0) {
+    await db.insert(schema.studentProfiles).values({
+      ...sProfJeifer,
+      id: "sprof-jeifer-direct",
+      userId: jeiferId,
+    });
+  } else {
+    await db.update(schema.studentProfiles).set({ ...sProfJeifer, id: "sprof-jeifer-direct", userId: jeiferId }).where(eq(schema.studentProfiles.userId, jeiferId));
   }
 
   // 3. Seed Realistic Courses
@@ -339,7 +398,7 @@ export async function runSeed() {
     description: "Design fault-tolerant backend services, Dockerized microservices, PostgreSQL connection pooling, and REST/gRPC APIs.",
     category: "Cloud & Systems",
     difficulty: "advanced",
-    trackId: trackCS.id,
+    trackId: trackCloudSys.id,
     thumbnailUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600",
     instructorId: mentor3.id,
     instructorName: "Nusrat Jahan",
@@ -353,7 +412,28 @@ export async function runSeed() {
     isPublished: true,
   };
 
-  for (const c of [course1, course2, course3]) {
+  const course4 = {
+    id: "crs-bengali-nlp",
+    slug: "bengali-nlp-foundations",
+    title: "Machine Learning & Bengali NLP Foundations",
+    description: "Explore neural networks, Bengali text tokenization, LLM fine-tuning, and document intelligence systems.",
+    category: "AI & ML",
+    difficulty: "intermediate",
+    trackId: trackWebAI.id,
+    thumbnailUrl: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&q=80&w=600",
+    instructorId: mentor1Id,
+    instructorName: "Dr. Tariqul Islam",
+    durationHours: 20,
+    prerequisites: ["Python Basics", "Linear Algebra"],
+    learningOutcomes: [
+      "Tokenize and clean complex Bengali compound text",
+      "Train transformer language models on curated Bengali corpora",
+      "Deploy semantic search and vector retrieval pipelines",
+    ],
+    isPublished: true,
+  };
+
+  for (const c of [course1, course2, course3, course4]) {
     const exists = await db.select().from(schema.courses).where(eq(schema.courses.id, c.id));
     if (exists.length === 0) {
       await db.insert(schema.courses).values(c);
@@ -632,23 +712,56 @@ export async function runSeed() {
     }
   }
 
-  // 6. Seed Course Enrollments for Students
+  // 6. Seed Course Enrollments for Jeifer Gomes and classmates
   const enrollmentsToSeed = [
     {
-      id: "enr-tanvir-c1",
+      id: "enr-jeifer-c1",
       userId: student1Id,
       courseId: course1.id,
       status: "active",
-      progressPercent: 74,
-      enrolledAt: new Date(Date.now() - 25 * 86400000),
+      progressPercent: 85,
+      enrolledAt: new Date(Date.now() - 30 * 86400000),
     },
     {
-      id: "enr-tanvir-c2",
+      id: "enr-jeifer-c2",
       userId: student1Id,
       courseId: course2.id,
       status: "active",
-      progressPercent: 88,
-      enrolledAt: new Date(Date.now() - 20 * 86400000),
+      progressPercent: 92,
+      enrolledAt: new Date(Date.now() - 25 * 86400000),
+    },
+    {
+      id: "enr-jeifer-c3",
+      userId: student1Id,
+      courseId: course3.id,
+      status: "active",
+      progressPercent: 60,
+      enrolledAt: new Date(Date.now() - 15 * 86400000),
+    },
+    {
+      id: "enr-jeifer-c4",
+      userId: student1Id,
+      courseId: course4.id,
+      status: "active",
+      progressPercent: 40,
+      enrolledAt: new Date(Date.now() - 10 * 86400000),
+    },
+    // Also seed enrollments for dedicated jeiferId
+    {
+      id: "enr-jeifer-dir-c1",
+      userId: jeiferId,
+      courseId: course1.id,
+      status: "active",
+      progressPercent: 85,
+      enrolledAt: new Date(Date.now() - 30 * 86400000),
+    },
+    {
+      id: "enr-jeifer-dir-c2",
+      userId: jeiferId,
+      courseId: course2.id,
+      status: "active",
+      progressPercent: 92,
+      enrolledAt: new Date(Date.now() - 25 * 86400000),
     },
     {
       id: "enr-anika-c1",
@@ -675,10 +788,26 @@ export async function runSeed() {
     }
   }
 
-  // 7. Seed Project Enrollments & Submissions
+  // 6.5 Seed Lesson Progress for Jeifer Gomes
+  for (const uId of [student1Id, jeiferId]) {
+    const lessonsCompleted = [
+      { id: `lp-${uId}-l1`, userId: uId, lessonId: lesson1.id, courseId: course1.id, isCompleted: true, watchTimeSeconds: 1080 },
+      { id: `lp-${uId}-l2`, userId: uId, lessonId: lesson2.id, courseId: course1.id, isCompleted: true, watchTimeSeconds: 1320 },
+      { id: `lp-${uId}-l3`, userId: uId, lessonId: lesson3.id, courseId: course1.id, isCompleted: true, watchTimeSeconds: 1500 },
+      { id: `lp-${uId}-l4`, userId: uId, lessonId: lesson4.id, courseId: course1.id, isCompleted: true, watchTimeSeconds: 1800 },
+    ];
+    for (const lp of lessonsCompleted) {
+      const exists = await db.select().from(schema.lessonProgress).where(eq(schema.lessonProgress.id, lp.id));
+      if (exists.length === 0) {
+        await db.insert(schema.lessonProgress).values(lp);
+      }
+    }
+  }
+
+  // 7. Seed Project Enrollments & Submissions for Jeifer Gomes
   const projEnrollmentsToSeed = [
     {
-      id: "penr-tanvir-bkash",
+      id: "penr-jeifer-bkash",
       userId: student1Id,
       projectId: proj3.id,
       status: "submitted",
@@ -686,12 +815,47 @@ export async function runSeed() {
       startedAt: new Date(Date.now() - 15 * 86400000),
     },
     {
-      id: "penr-tanvir-ocr",
+      id: "penr-jeifer-ai-rev",
+      userId: student1Id,
+      projectId: proj1.id,
+      status: "completed",
+      currentMilestone: 3,
+      startedAt: new Date(Date.now() - 22 * 86400000),
+      completedAt: new Date(Date.now() - 3 * 86400000),
+    },
+    {
+      id: "penr-jeifer-dhaka",
+      userId: student1Id,
+      projectId: proj4.id,
+      status: "in_progress",
+      currentMilestone: 1,
+      startedAt: new Date(Date.now() - 8 * 86400000),
+    },
+    {
+      id: "penr-jeifer-ocr",
       userId: student1Id,
       projectId: proj5.id,
       status: "in_progress",
       currentMilestone: 1,
       startedAt: new Date(Date.now() - 5 * 86400000),
+    },
+    // Also for dedicated jeiferId
+    {
+      id: "penr-jeifer-dir-bkash",
+      userId: jeiferId,
+      projectId: proj3.id,
+      status: "submitted",
+      currentMilestone: 2,
+      startedAt: new Date(Date.now() - 15 * 86400000),
+    },
+    {
+      id: "penr-jeifer-dir-ai-rev",
+      userId: jeiferId,
+      projectId: proj1.id,
+      status: "completed",
+      currentMilestone: 3,
+      startedAt: new Date(Date.now() - 22 * 86400000),
+      completedAt: new Date(Date.now() - 3 * 86400000),
     },
   ];
 
@@ -702,13 +866,13 @@ export async function runSeed() {
     }
   }
 
-  // Project Submission & Review
+  // Project Submissions & Reviews for Jeifer Gomes
   const sub1 = {
-    id: "sub-bkash-tanvir",
+    id: "sub-bkash-jeifer",
     projectId: proj3.id,
     userId: student1Id,
-    githubRepoUrl: "https://github.com/tanvir-ahmed-buet/bkash-ledger-simulator",
-    liveDemoUrl: "https://bkash-ledger-buet.vercel.app",
+    githubRepoUrl: "https://github.com/jeifer-gomes/bkash-ledger-simulator",
+    liveDemoUrl: "https://bkash-ledger-jeifer.vercel.app",
     notes: "Implemented double-entry accounting with PostgreSQL row-level locks, HMAC webhook verification, and automated reconciliation reports.",
     status: "reviewed",
     submittedAt: new Date(Date.now() - 2 * 86400000),
@@ -719,13 +883,39 @@ export async function runSeed() {
     await db.insert(schema.projectSubmissions).values(sub1);
 
     await db.insert(schema.projectReviews).values({
-      id: "rev-bkash-tanvir",
+      id: "rev-bkash-jeifer",
       submissionId: sub1.id,
       reviewerId: mentor1Id,
       score: 96,
-      feedbackMarkdown: "### Outstanding Engineering Quality!\n- **Idempotency**: Excellent handling of duplicate transaction requests.\n- **ACID Integrity**: Row locks prevent race conditions during concurrent transfers.\n- **Recommendation**: Consider adding Redis cache for read-heavy account balance queries.",
+      feedbackMarkdown: "### Outstanding Engineering Quality, Jeifer!\n- **Idempotency**: Excellent handling of duplicate transaction requests.\n- **ACID Integrity**: Row locks prevent race conditions during concurrent transfers.\n- **Recommendation**: Consider adding Redis cache for read-heavy account balance queries.",
       status: "approved",
       reviewedAt: new Date(Date.now() - 86400000),
+    });
+  }
+
+  const sub2 = {
+    id: "sub-ai-rev-jeifer",
+    projectId: proj1.id,
+    userId: student1Id,
+    githubRepoUrl: "https://github.com/jeifer-gomes/ai-code-reviewer-platform",
+    liveDemoUrl: "https://ai-reviewer-jeifer.vercel.app",
+    notes: "Full-stack automated code reviewer with TypeScript AST parser, rule-based heuristics, and Google Gemini LLM feedback stream.",
+    status: "reviewed",
+    submittedAt: new Date(Date.now() - 5 * 86400000),
+  };
+
+  const sub2Exists = await db.select().from(schema.projectSubmissions).where(eq(schema.projectSubmissions.id, sub2.id));
+  if (sub2Exists.length === 0) {
+    await db.insert(schema.projectSubmissions).values(sub2);
+
+    await db.insert(schema.projectReviews).values({
+      id: "rev-ai-rev-jeifer",
+      submissionId: sub2.id,
+      reviewerId: mentor2.id,
+      score: 98,
+      feedbackMarkdown: "### Exceptional Capstone Project!\n- **Architecture**: Clean modular Next.js App Router design.\n- **Parsing**: TypeScript compiler API traversal operates reliably.\n- **Mentorship**: Promoted to senior review showcase.",
+      status: "approved",
+      reviewedAt: new Date(Date.now() - 3 * 86400000),
     });
   }
 
@@ -740,7 +930,7 @@ export async function runSeed() {
       action: "Graded bKash Payment Ledger Capstone",
       targetId: sub1.id,
       targetType: "project_submission",
-      details: { score: 96, studentName: "Tanvir Ahmed" },
+      details: { score: 96, studentName: "Jeifer Gomes" },
       createdAt: new Date(Date.now() - 86400000),
     },
     {
@@ -761,10 +951,10 @@ export async function runSeed() {
       actorName: "System Super Admin",
       actorRole: "super_admin",
       actionType: "ORGANIZATION_REGISTERED",
-      action: "Registered Bangladesh University of Engineering and Technology",
-      targetId: "org-buet",
+      action: "Registered Notre Dame University Bangladesh",
+      targetId: "org-ndub",
       targetType: "organization",
-      details: { domain: "buet.ac.bd", status: "active" },
+      details: { domain: "ndub.edu.bd", status: "active" },
       createdAt: new Date(Date.now() - 30 * 86400000),
     },
   ];
@@ -773,6 +963,125 @@ export async function runSeed() {
     const exists = await db.select().from(schema.auditLogs).where(eq(schema.auditLogs.id, log.id));
     if (exists.length === 0) {
       await db.insert(schema.auditLogs).values(log);
+    }
+  }
+
+  // 8.5 Seed Notifications for Jeifer Gomes
+  for (const uId of [student1Id, jeiferId]) {
+    const userNotifications = [
+      {
+        id: `notif-${uId}-1`,
+        userId: uId,
+        title: "Faculty Feedback Received",
+        message: "Dr. Tariqul Islam approved and scored your bKash Payment Ledger project (96/100).",
+        type: "success",
+        linkUrl: "/student/dashboard",
+        isRead: false,
+        createdAt: new Date(Date.now() - 15 * 60000),
+      },
+      {
+        id: `notif-${uId}-2`,
+        userId: uId,
+        title: "Assignment Graded: DSA Lab #4",
+        message: "Eng. Mahbubur Rahman graded your Binary Trees & Graph Traversal assignment (95/100 - Grade A).",
+        type: "info",
+        linkUrl: "/student/dashboard",
+        isRead: false,
+        createdAt: new Date(Date.now() - 2 * 3600000),
+      },
+      {
+        id: `notif-${uId}-3`,
+        userId: uId,
+        title: "🔥 14-Day Learning Streak!",
+        message: "Congratulations Jeifer! You maintained a 14-day study streak. +250 XP awarded.",
+        type: "success",
+        linkUrl: "/student/dashboard",
+        isRead: true,
+        createdAt: new Date(Date.now() - 6 * 3600000),
+      },
+    ];
+
+    for (const notif of userNotifications) {
+      const exists = await db.select().from(schema.notifications).where(eq(schema.notifications.id, notif.id));
+      if (exists.length === 0) {
+        await db.insert(schema.notifications).values(notif);
+      }
+    }
+  }
+
+  // 8.6 Seed Workspace Records for Jeifer Gomes
+  for (const uId of [student1Id, jeiferId]) {
+    const notes = [
+      {
+        id: `note-${uId}-1`,
+        userId: uId,
+        courseId: course1.id,
+        lessonId: lesson1.id,
+        title: "Next.js App Router Architecture & RSC Boundaries",
+        content: "React Server Components execute strictly on the server and stream HTML over the wire. Keep client components lightweight and localized to interactive leaves.",
+        tags: ["Next.js", "React 19", "Architecture"],
+        isPinned: true,
+      },
+      {
+        id: `note-${uId}-2`,
+        userId: uId,
+        courseId: course3.id,
+        lessonId: lesson3.id,
+        title: "PostgreSQL B-Tree vs BRIN Indexes for FinTech Ledgers",
+        content: "For high-volume transaction ledgers with monotonically increasing timestamps, BRIN indexes reduce index size by over 90% while retaining fast range scans.",
+        tags: ["PostgreSQL", "Database", "FinTech"],
+        isPinned: false,
+      },
+    ];
+
+    for (const n of notes) {
+      const exists = await db.select().from(schema.workspaceNotes).where(eq(schema.workspaceNotes.id, n.id));
+      if (exists.length === 0) {
+        await db.insert(schema.workspaceNotes).values(n);
+      }
+    }
+
+    const bookmarks = [
+      {
+        id: `bmk-${uId}-1`,
+        userId: uId,
+        courseId: course1.id,
+        lessonId: lesson4.id,
+        title: "Streaming AI Responses with Google Gemini",
+        timestampSeconds: 420,
+        note: "Important section on handling backpressure and tool-call token limits.",
+      },
+    ];
+
+    for (const b of bookmarks) {
+      const exists = await db.select().from(schema.workspaceBookmarks).where(eq(schema.workspaceBookmarks.id, b.id));
+      if (exists.length === 0) {
+        await db.insert(schema.workspaceBookmarks).values(b);
+      }
+    }
+
+    const discussion = {
+      id: `disc-${uId}-1`,
+      lessonId: lesson3.id,
+      authorId: uId,
+      authorName: "Jeifer Gomes",
+      title: "Preventing Race Conditions in High-Volume MFS Webhook Handlers",
+      content: "When handling concurrent bKash callbacks for the same merchant account, how should we structure row-level locks in Drizzle ORM to avoid deadlocks?",
+      upvotes: 18,
+    };
+
+    const discExists = await db.select().from(schema.workspaceDiscussions).where(eq(schema.workspaceDiscussions.id, discussion.id));
+    if (discExists.length === 0) {
+      await db.insert(schema.workspaceDiscussions).values(discussion);
+
+      await db.insert(schema.workspaceDiscussionReplies).values({
+        id: `reply-${uId}-1`,
+        discussionId: discussion.id,
+        authorId: mentor1Id,
+        authorName: "Dr. Tariqul Islam",
+        content: "Excellent question Jeifer! You should acquire deterministic locks by sorting account IDs before executing `SELECT FOR UPDATE`. Combining that with an idempotency key table in PostgreSQL ensures zero duplicate balance adjustments.",
+        upvotes: 12,
+      });
     }
   }
 
@@ -821,6 +1130,84 @@ export async function runSeed() {
     };
 
     await db.insert(schema.assessmentQuestions).values([q1, q2]);
+  }
+
+  // 10. Seed Additional Course Assessments & Attempts for Jeifer Gomes
+  const assessment2 = {
+    id: "ass-dsa-trees",
+    courseId: course2.id,
+    title: "DSA Lab #4 — Binary Trees & Graph Traversal",
+    description: "Assess tree traversals, height balancing, and Dijkstra shortest path implementations.",
+    passingScore: 70,
+  };
+  const asm2Exists = await db.select().from(schema.assessments).where(eq(schema.assessments.id, assessment2.id));
+  if (asm2Exists.length === 0) {
+    await db.insert(schema.assessments).values(assessment2);
+    await db.insert(schema.assessmentQuestions).values([
+      {
+        id: "q-dsa-1",
+        assessmentId: assessment2.id,
+        questionText: "What is the worst-case time complexity of searching in an unbalanced Binary Search Tree (BST)?",
+        options: [
+          { id: 0, text: "O(log n)" },
+          { id: 1, text: "O(n)" },
+          { id: 2, text: "O(1)" },
+          { id: 3, text: "O(n log n)" },
+        ],
+        correctOptionIndex: 1,
+        explanation: "In an unbalanced (skewed) BST, searching degrades to linear traversal O(n).",
+        orderIndex: 1,
+      },
+    ]);
+  }
+
+  const assessment3 = {
+    id: "ass-cloud-webhook",
+    courseId: course3.id,
+    title: "bKash Idempotent Webhook Verification Engine",
+    description: "Assess HMAC-SHA256 signatures, retry backoffs, and row-level locking.",
+    passingScore: 75,
+  };
+  const asm3Exists = await db.select().from(schema.assessments).where(eq(schema.assessments.id, assessment3.id));
+  if (asm3Exists.length === 0) {
+    await db.insert(schema.assessments).values(assessment3);
+  }
+
+  // Seed Assessment Attempts for Jeifer Gomes
+  for (const uId of [student1Id, jeiferId]) {
+    const attempts = [
+      {
+        id: `att-${uId}-c1`,
+        assessmentId: assessment1.id,
+        userId: uId,
+        score: 98,
+        passed: true,
+        answers: { "0": 1, "1": 0 },
+      },
+      {
+        id: `att-${uId}-dsa`,
+        assessmentId: assessment2.id,
+        userId: uId,
+        score: 95,
+        passed: true,
+        answers: { "0": 1 },
+      },
+      {
+        id: `att-${uId}-cloud`,
+        assessmentId: assessment3.id,
+        userId: uId,
+        score: 92,
+        passed: true,
+        answers: { "0": 0 },
+      },
+    ];
+
+    for (const att of attempts) {
+      const exists = await db.select().from(schema.assessmentAttempts).where(eq(schema.assessmentAttempts.id, att.id));
+      if (exists.length === 0) {
+        await db.insert(schema.assessmentAttempts).values(att);
+      }
+    }
   }
 
   console.log("✅ QbitX database seed completed successfully!");

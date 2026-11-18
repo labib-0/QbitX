@@ -30,12 +30,12 @@ export const FALLBACK_PROJECTS: Project[] = [
     status: "Review Pending",
     sprintProgress: 85,
     nextDeadline: "Mentor Code Review In Progress",
-    githubRepoUrl: "https://github.com/tanvir-ahmed-buet/bkash-ledger-simulator",
+    githubRepoUrl: "https://github.com/jeifer-gomes/bkash-ledger-simulator",
     techStack: ["Next.js", "TypeScript", "Neon PostgreSQL", "ACID Transactions", "Webhooks"],
     team: [
       {
         id: "student-self",
-        name: "Tanvir Ahmed (You)",
+        name: "Jeifer Gomes (You)",
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
         role: "Lead Systems Architect",
       },
@@ -60,12 +60,12 @@ export const FALLBACK_PROJECTS: Project[] = [
     status: "In Progress",
     sprintProgress: 60,
     nextDeadline: "Milestone 2 Due Friday",
-    githubRepoUrl: "https://github.com/tanvir-ahmed-buet/dhaka-traffic-optimizer",
+    githubRepoUrl: "https://github.com/jeifer-gomes/dhaka-traffic-optimizer",
     techStack: ["Python", "FastAPI", "Graph Theory", "A* Search", "Next.js"],
     team: [
       {
         id: "student-self",
-        name: "Tanvir Ahmed (You)",
+        name: "Jeifer Gomes (You)",
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
         role: "Graph Algorithm Engineer",
       },
@@ -123,7 +123,7 @@ export class ProjectService {
           team: [
             {
               id: "student-self",
-              name: "Tanvir Ahmed (You)",
+              name: "Jeifer Gomes (You)",
               avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
               role: "Lead Engineer",
             },

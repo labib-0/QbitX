@@ -10,7 +10,7 @@ export const MOCK_CERTIFICATE_ITEMS: CertificateApprovalItem[] = [
   {
     id: "cert-req-1",
     studentId: "usr-student-demo",
-    studentName: "Tanvir Ahmed",
+    studentName: "Jeifer Gomes",
     studentAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
     courseId: "crs-1",
     courseTitle: "Introduction to Programming & Problem Solving",

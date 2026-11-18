@@ -18,9 +18,32 @@ interface AdminStats {
     action: string;
     actorName?: string;
     actorRole?: string;
-    details?: string;
+    details?: any;
     createdAt: string;
   }>;
+}
+
+function formatAuditDetails(details: any, fallbackAction?: string): string {
+  if (!details) return fallbackAction || "Platform event recorded";
+  if (typeof details === "string") return details;
+  if (typeof details === "object") {
+    if (details.score !== undefined && details.studentName) {
+      return `Graded capstone for ${details.studentName} with score ${details.score}/100.`;
+    }
+    if (details.location) {
+      return `Location: ${details.location}`;
+    }
+    if (details.domain) {
+      return `Domain: ${details.domain} (${details.status || "active"})`;
+    }
+    if (details.message) return String(details.message);
+    try {
+      return JSON.stringify(details);
+    } catch {
+      return fallbackAction || "Platform event recorded";
+    }
+  }
+  return String(details);
 }
 
 const FALLBACK_ADMIN_STATS: AdminStats = {
@@ -196,7 +219,7 @@ export function PlatformOverviewWidget() {
                     <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider block">
                       {log.actionType || log.action || "SYSTEM"}
                     </span>
-                    <p className="font-bold text-foreground">{log.details || log.action}</p>
+                    <p className="font-bold text-foreground">{formatAuditDetails(log.details, log.action)}</p>
                     <p className="text-[10px] text-muted-foreground">
                       Actor: <strong>{log.actorName || "Admin"}</strong>
                     </p>

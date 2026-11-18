@@ -48,6 +48,36 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(schema.auditLogs.createdAt))
       .limit(8);
 
+    const safeRecentLogs = recentLogs.map((log: any) => {
+      let detailsStr = "";
+      if (typeof log.details === "string") {
+        detailsStr = log.details;
+      } else if (log.details && typeof log.details === "object") {
+        if ("score" in log.details && "studentName" in log.details) {
+          detailsStr = `Graded capstone for ${log.details.studentName} with score ${log.details.score}/100.`;
+        } else if ("location" in log.details) {
+          detailsStr = `Location: ${log.details.location}`;
+        } else if ("domain" in log.details) {
+          detailsStr = `Domain: ${log.details.domain} (${log.details.status || "active"})`;
+        } else if ("message" in log.details) {
+          detailsStr = String(log.details.message);
+        } else {
+          try {
+            detailsStr = JSON.stringify(log.details);
+          } catch {
+            detailsStr = log.action || "Platform event recorded";
+          }
+        }
+      } else {
+        detailsStr = log.action || "Platform event recorded";
+      }
+
+      return {
+        ...log,
+        details: detailsStr,
+      };
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -57,7 +87,7 @@ export async function GET(request: NextRequest) {
         totalEnrollments: Number(enrollmentCount[0]?.count || 0),
         totalSubmissions: Number(submissionCount[0]?.count || 0),
         pendingReviews: Number(pendingReviews[0]?.count || 0),
-        recentActivity: recentLogs,
+        recentActivity: safeRecentLogs,
       },
     });
   } catch (error: any) {

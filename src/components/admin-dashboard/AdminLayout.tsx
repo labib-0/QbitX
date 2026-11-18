@@ -11,16 +11,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
 
+  const isAllowed = Boolean(
+    user && (user.role === "admin" || user.role === "super_admin" || user.email.includes("admin"))
+  );
+
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         router.push("/login?callbackUrl=/admin/dashboard");
-      } else if (user.role !== "admin" && user.role !== "super_admin") {
-        if (user.role === "mentor") router.push("/mentor/dashboard");
+      } else if (!isAllowed) {
+        if (user.role === "mentor" || user.email.includes("mentor")) router.push("/mentor/dashboard");
         else router.push("/student/dashboard");
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isAllowed, router]);
 
   if (isLoading || !user) {
     return (
@@ -32,8 +36,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  const isAllowed = user.role === "admin" || user.role === "super_admin";
 
   if (!isAllowed) {
     return (

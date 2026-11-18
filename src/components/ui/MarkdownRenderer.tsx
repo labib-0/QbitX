@@ -92,9 +92,10 @@ function renderInlineContent(text: string): React.ReactNode[] {
       (part.startsWith("**") && part.endsWith("**") && part.length >= 4) ||
       (part.startsWith("__") && part.endsWith("__") && part.length >= 4)
     ) {
+      const inner = part.slice(2, -2);
       return (
         <strong key={idx} className="font-bold text-foreground">
-          {part.slice(2, -2)}
+          {inner.includes("`") ? renderInlineContent(inner) : inner}
         </strong>
       );
     }
@@ -141,8 +142,8 @@ function renderInlineContent(text: string): React.ReactNode[] {
 export function MarkdownRenderer({ content, className = "", isStreaming = false }: MarkdownRendererProps) {
   if (!content) return null;
 
-  // Split into lines for block-level parsing
-  const lines = content.split("\n");
+  // Split into lines for block-level parsing, normalizing newlines
+  const lines = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const elements: React.ReactNode[] = [];
 
   let inCodeBlock = false;

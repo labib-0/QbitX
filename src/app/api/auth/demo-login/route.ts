@@ -62,7 +62,11 @@ export async function POST(request: NextRequest) {
     const setCookie = authRes.headers.get("set-cookie");
     const response = NextResponse.json({
       success: true,
-      user: authData.user,
+      user: {
+        ...authData.user,
+        role: account.role,
+        isApproved: true,
+      },
       redirectUrl: account.redirectUrl,
     });
 

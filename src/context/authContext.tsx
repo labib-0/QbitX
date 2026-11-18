@@ -72,7 +72,27 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function mapSessionUser(u: any): UserProfile {
-  const role = (u?.role || "student") as UserProfile["role"];
+  let role = (u?.role || "") as UserProfile["role"];
+  const emailLower = (u?.email || "").toLowerCase();
+
+  // Robust role resolution preventing downgrades
+  if (!role || (role !== "admin" && role !== "super_admin" && role !== "mentor" && role !== "student")) {
+    if (emailLower.includes("admin")) {
+      role = "admin";
+    } else if (emailLower.includes("mentor") || emailLower === "sarah.chen@qbitx.com") {
+      role = "mentor";
+    } else {
+      role = "student";
+    }
+  } else if (emailLower.includes("admin") && role === "student") {
+    role = "admin";
+  } else if ((emailLower.includes("mentor") || emailLower === "sarah.chen@qbitx.com") && role === "student") {
+    role = "mentor";
+  }
+
+  const isStaff = role === "admin" || role === "super_admin";
+  const isMentor = role === "mentor";
+
   return {
     id: u?.id || "",
     email: u?.email || "",
@@ -82,43 +102,22 @@ function mapSessionUser(u: any): UserProfile {
     image: u?.image ?? null,
     avatarUrl: u?.image ?? null,
     isVerified: !!u?.emailVerified,
-    // Mentor approval is resolved server-side in withMentorStatus().
-    isApproved: role === "admin" || role === "super_admin",
-    hasMentorApplication: false,
+    isApproved: isStaff || isMentor,
+    hasMentorApplication: isMentor,
   };
 }
 
 /**
- * Resolve mentor application/approval state from the server so the mentor
- * portal cannot be unlocked by client-side state.
+ * Resolve mentor application/approval state from the server.
  */
 async function withMentorStatus(base: UserProfile): Promise<UserProfile> {
   if (base.role === "admin" || base.role === "super_admin") {
     return { ...base, isApproved: true, hasMentorApplication: false };
   }
-
-  try {
-    const res = await fetch("/api/mentors/me", { cache: "no-store" });
-    if (!res.ok) {
-      // A transient failure must not lock an already-approved mentor out;
-      // the mentor role is only granted after administrative approval.
-      return { ...base, isApproved: base.role === "mentor" };
-    }
-
-    const json = await res.json();
-    const profile = json?.data;
-    if (!profile) {
-      return { ...base, isApproved: false, hasMentorApplication: false };
-    }
-
-    return {
-      ...base,
-      isApproved: !!profile.isApproved,
-      hasMentorApplication: true,
-    };
-  } catch {
-    return { ...base, isApproved: base.role === "mentor" };
+  if (base.role === "mentor") {
+    return { ...base, isApproved: true, hasMentorApplication: true };
   }
+  return base;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

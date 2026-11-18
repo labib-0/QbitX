@@ -410,13 +410,13 @@ export function AIAssistantWidget({ isFloating = false, onCloseFloating }: AIAss
         {/* Chat Canvas */}
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
           {/* Suggested Prompts Bar */}
-          <div className="px-4 py-2 bg-muted/30 border-b border-border/40 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
+          <div className="px-4 py-2.5 bg-muted/30 border-b border-border/40 flex items-center gap-1.5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden shrink-0">
             <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">Suggested:</span>
             {prompts.map((p, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(p)}
-                className="text-[10px] font-semibold bg-card border border-border/60 hover:border-sky-500 text-foreground px-2.5 py-1 rounded-full whitespace-nowrap transition-all shrink-0 hover:bg-sky-500/10"
+                className="text-[10px] font-semibold bg-card border border-border/60 hover:border-sky-500 text-foreground px-2.5 py-1 rounded-full whitespace-nowrap transition-all shrink-0 hover:bg-sky-500/10 shadow-none"
               >
                 {p}
               </button>
